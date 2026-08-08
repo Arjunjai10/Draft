@@ -48,6 +48,12 @@ router.post('/:draftId/simulate', async (req, res) => {
     for (const [roleKey, charId] of p2RosterData.entries()) {
       rosterB[roleKey] = charMap[charId.toString()];
     }
+    
+    console.log("Roster A keys:", Object.keys(rosterA).length);
+    console.log("Roster B keys:", Object.keys(rosterB).length);
+    console.log("Verse roles:", verse.roles.length);
+    console.log("Roster A keys present:", Object.keys(rosterA));
+    console.log("Roster A has undefined values:", Object.values(rosterA).includes(undefined));
 
     const result = simulateBattle(rosterA, rosterB, verse.roles, player1, player2);
 
@@ -61,18 +67,21 @@ router.post('/:draftId/simulate', async (req, res) => {
 
     const savedResult = await battleResult.save();
 
-    // Log to MatchHistory if not a tournament
-    if (session.mode !== 'tournament') {
-      const historyEntry = new MatchHistory({
-        userId: null,
-        opponentName: session.players[1]?.name || 'CPU',
-        verseId: verse._id,
-        mode: session.mode,
-        score: { p1: result.scoreA, p2: result.scoreB },
-        result: result.overallWinner
-      });
-      await historyEntry.save();
-    } else {
+    let historyResult = 'tie';
+    if (result.overallWinner === player1) historyResult = 'player1';
+    else if (result.overallWinner === player2) historyResult = 'player2';
+
+    const historyEntry = new MatchHistory({
+      userId: null,
+      opponentName: session.players[1]?.name || 'CPU',
+      verseId: verse._id,
+      mode: session.mode,
+      score: { p1: result.scoreA, p2: result.scoreB },
+      result: historyResult
+    });
+    await historyEntry.save();
+
+    if (session.mode === 'tournament') {
       // Tournament Advancement Logic
       const tournament = await Tournament.findById(session.tournamentId);
       if (tournament) {

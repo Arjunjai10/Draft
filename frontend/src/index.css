@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hero-placeholder: linear-gradient(to bottom, #111827, #1f2937, #374151);
+}
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-gray-100 min-h-screen;
+  }
+}
+
+.bg-hero-placeholder {
+  background-image: var(--color-hero-placeholder);
+}

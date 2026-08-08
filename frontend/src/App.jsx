@@ -9,9 +9,9 @@ import { TournamentLanding } from './pages/TournamentLanding';
 import { TournamentHost } from './pages/TournamentHost';
 import { TournamentJoin } from './pages/TournamentJoin';
 import { LiveBracket } from './pages/LiveBracket';
-const Gallery = () => <div className="p-8 text-center"><h2 className="text-2xl">Verse Gallery</h2></div>;
-const VerseDetail = () => <div className="p-8 text-center"><h2 className="text-2xl">Verse Detail</h2></div>;
-const PublishVerse = () => <div className="p-8 text-center"><h2 className="text-2xl">Publish Verse</h2></div>;
+import { Gallery } from './pages/Gallery';
+import { VerseDetail } from './pages/VerseDetail';
+import { PublishVerse } from './pages/PublishVerse';
 
 function App() {
   return (

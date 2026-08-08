@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getVerses } from '../api/verses';
+import { fetchVerses } from '../api/verses';
 import { v4 as uuidv4 } from 'uuid';
 
 export const TournamentHost = () => {
@@ -14,7 +14,7 @@ export const TournamentHost = () => {
   const [hostName, setHostName] = useState('');
 
   useEffect(() => {
-    getVerses().then(data => {
+    fetchVerses().then(data => {
       setVerses(data);
       if (data.length > 0) setVerseId(data[0]._id);
       setLoading(false);

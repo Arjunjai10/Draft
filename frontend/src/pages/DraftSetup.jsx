@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getVerse } from '../api/verses';
+import { fetchVerseBySlug } from '../api/verses';
 import { createDraft } from '../api/drafts';
 
 export const DraftSetup = () => {
@@ -10,7 +10,7 @@ export const DraftSetup = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    getVerse(verseSlug)
+    fetchVerseBySlug(verseSlug)
       .then(setVerse)
       .catch(console.error)
       .finally(() => setLoading(false));

@@ -29,7 +29,7 @@ export const Landing = () => {
           Build your ultimate dream team and simulate battles!
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
           <Link 
             to="/draft/dbz" 
             className="p-6 bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-blue-500 rounded-xl transition-all group flex flex-col items-center gap-4"
@@ -50,6 +50,17 @@ export const Landing = () => {
             <div>
               <h2 className="text-2xl font-bold uppercase tracking-wider text-white">Tournament</h2>
               <p className="text-gray-400 text-sm mt-1">Online Bracket (Coming Soon)</p>
+            </div>
+          </Link>
+          
+          <Link 
+            to="/gallery" 
+            className="p-6 bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-green-500 rounded-xl transition-all group flex flex-col items-center gap-4"
+          >
+            <LucideIcons.Library size={48} className="text-green-500 group-hover:scale-110 transition-transform" />
+            <div>
+              <h2 className="text-2xl font-bold uppercase tracking-wider text-white">Gallery</h2>
+              <p className="text-gray-400 text-sm mt-1">Play & Publish Community Verses</p>
             </div>
           </Link>
         </div>

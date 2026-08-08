@@ -10,6 +10,7 @@ const roleSchema = new mongoose.Schema({
 const verseSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true },
   name: { type: String, required: true },
+  description: { type: String, default: '' },
   isOfficial: { type: Boolean, default: false },
   coverImages: [{ type: String }],
   roles: [roleSchema],

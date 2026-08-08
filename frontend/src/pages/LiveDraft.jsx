@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { getVerse, getVerseCharacters } from '../api/verses';
+import { fetchVerseBySlug, fetchCharacters } from '../api/verses';
 import { getDraft } from '../api/drafts';
 import { DraftHUD } from '../components/draft/DraftHUD';
 import { RoleGrid } from '../components/draft/RoleGrid';
@@ -36,8 +36,8 @@ export const LiveDraft = () => {
 
   useEffect(() => {
     Promise.all([
-      getVerse(verseSlug),
-      getVerseCharacters(verseSlug),
+      fetchVerseBySlug(verseSlug),
+      fetchCharacters(verseSlug),
       getDraft(sessionId)
     ]).then(([v, chars, sess]) => {
       setVerse(v);

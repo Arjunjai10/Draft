@@ -6,7 +6,6 @@ import * as LucideIcons from 'lucide-react';
 
 export const LiveBracket = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

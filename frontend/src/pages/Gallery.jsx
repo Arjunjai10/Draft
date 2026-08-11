@@ -10,7 +10,13 @@ export const Gallery = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadVerses();
+    let isMounted = true;
+    setLoading(true);
+    fetchVerses(sort, search)
+      .then(data => { if (isMounted) setVerses(data); })
+      .catch(err => console.error('Failed to fetch verses:', err))
+      .finally(() => { if (isMounted) setLoading(false); });
+    return () => { isMounted = false; };
   }, [sort]);
 
   const loadVerses = async (searchQuery = search) => {

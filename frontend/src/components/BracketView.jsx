@@ -5,7 +5,6 @@ import * as LucideIcons from 'lucide-react';
 export const BracketView = ({ tournament }) => {
   const navigate = useNavigate();
   const myPlayerId = localStorage.getItem(`tournament_${tournament._id}_playerId`);
-  const myToken = localStorage.getItem(`tournament_${tournament._id}_token`);
 
   const { bracket, playerCount } = tournament;
   const qfMatches = bracket.filter(m => m.round === 1 && playerCount === 8);

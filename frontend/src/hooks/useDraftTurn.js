@@ -11,12 +11,13 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   const isComplete = session?.status === 'complete';
   const currentPlayer = session?.players.find(p => p.id === currentTurnPlayerId);
 
-  // In local mode, both players are "local". In online mode, only the localPlayerId is "local"
-  const isLocalTurn = session?.mode === 'online' ? currentTurnPlayerId === localPlayerId : true;
+  const isSocketMode = (session?.mode === 'online' || session?.mode === 'tournament') && Boolean(socket);
+  // In local mode, both players are "local". In online/tournament socket mode, only the localPlayerId is "local"
+  const isLocalTurn = isSocketMode ? currentTurnPlayerId === localPlayerId : true;
 
   // Socket listeners
   useEffect(() => {
-    if (!socket || session?.mode !== 'online') return;
+    if (!socket || !isSocketMode) return;
 
     const handleUpdate = (updatedSession) => {
       setSession(updatedSession);
@@ -42,7 +43,7 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
       socket.off('draft:update', handleUpdate);
       socket.off('draft:draw', handleDraw);
     };
-  }, [socket, session?.mode]);
+  }, [socket, isSocketMode]);
 
   const getOpenRoles = (playerId) => {
     if (!session || !session.verse) return [];
@@ -66,10 +67,10 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
     const selected = availableCharacters[randomIndex];
     setDrawnCharacter(selected);
 
-    if (session.mode === 'online' && socket) {
+    if (isSocketMode) {
       socket.emit('draft:draw', { draftId: session._id, character: selected });
     }
-  }, [session, isComplete, drawnCharacter, isCPUThinking, allCharacters, draftedCharacterIds, isLocalTurn, socket]);
+  }, [session, isComplete, drawnCharacter, isCPUThinking, allCharacters, draftedCharacterIds, isLocalTurn, socket, isSocketMode]);
 
   const nextTurn = useCallback((updatedRosters, updatedPasses) => {
     let nextIndex = session.currentTurnIndex + 1;
@@ -99,7 +100,7 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   const assignCharacter = useCallback((roleKey) => {
     if (!drawnCharacter || !currentTurnPlayerId || !isLocalTurn) return;
 
-    if (session.mode === 'online' && socket) {
+    if (isSocketMode) {
       socket.emit('draft:pick', {
         draftId: session._id,
         playerId: currentTurnPlayerId,
@@ -119,7 +120,7 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
 
     setDraftedCharacterIds(prev => new Set(prev).add(drawnCharacter._id));
     nextTurn(updatedRosters, session.passesRemaining);
-  }, [drawnCharacter, currentTurnPlayerId, session, nextTurn, isLocalTurn, socket]);
+  }, [drawnCharacter, currentTurnPlayerId, session, nextTurn, isLocalTurn, socket, isSocketMode]);
 
   const passTurn = useCallback(() => {
     if (!currentTurnPlayerId || !isLocalTurn) return;
@@ -130,7 +131,7 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
       return;
     }
 
-    if (session.mode === 'online' && socket) {
+    if (isSocketMode) {
       socket.emit('draft:pass', {
         draftId: session._id,
         playerId: currentTurnPlayerId
@@ -147,7 +148,7 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
     setSession(prev => ({ ...prev, passesRemaining: updatedPasses }));
     setDrawnCharacter(null);
     drawCharacter(); // Redraw immediately
-  }, [currentTurnPlayerId, session, drawCharacter, isLocalTurn, socket]);
+  }, [currentTurnPlayerId, session, drawCharacter, isLocalTurn, socket, isSocketMode]);
 
   // CPU auto-turn logic (only if mode is 'cpu')
   if (session?.mode === 'cpu' && !isComplete && currentPlayer?.isCPU && !isCPUThinking && !drawnCharacter) {

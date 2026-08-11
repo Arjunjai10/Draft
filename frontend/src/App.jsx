@@ -3,7 +3,6 @@ import { DraftSetup } from './pages/DraftSetup';
 import { LiveDraft } from './pages/LiveDraft';
 import { BattleSim } from './pages/BattleSim';
 import { Landing } from './pages/Landing';
-import { SettingsModal } from './components/settings/SettingsModal';
 
 import { TournamentLanding } from './pages/TournamentLanding';
 import { TournamentHost } from './pages/TournamentHost';

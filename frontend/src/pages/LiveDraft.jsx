@@ -104,7 +104,7 @@ export const LiveDraft = () => {
   if (!session) return <div className="p-8 text-center text-red-500">Failed to load draft</div>;
 
   const player1 = session.players[0];
-  const player2 = session.players[1]; // CPU
+  const player2 = session.players[1] || { id: 'player2', name: 'Player 2' };
 
   const p1Roster = session.rosters[player1.id] || {};
   const p2Roster = session.rosters[player2.id] || {};
@@ -117,9 +117,6 @@ export const LiveDraft = () => {
     });
     return fullRoster;
   };
-
-  const isPlayer1Turn = currentPlayer?.id === player1.id && !isComplete;
-  const isPlayer2Turn = currentPlayer?.id === player2?.id && !isComplete;
 
   if (draftAbandoned) {
     return (
@@ -170,7 +167,7 @@ export const LiveDraft = () => {
             />
           </div>
 
-          {/* Player 2 Column (CPU) */}
+          {/* Player 2 Column */}
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold uppercase tracking-widest text-red-400">{player2.name}</h3>
@@ -226,6 +223,8 @@ export const LiveDraft = () => {
         onAssign={assignCharacter}
       />
       <JoinDraftModal isOpen={showJoinModal} onJoin={handleJoinDraft} />
+      <HowItWorksModal isOpen={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
     </div>
   );

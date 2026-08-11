@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { simulateBattle } from '../api/battles';
+import { getDraft } from '../api/drafts';
 import * as LucideIcons from 'lucide-react';
 import { SettingsModal } from '../components/settings/SettingsModal';
 
@@ -12,6 +13,7 @@ export const BattleSim = () => {
   const navigate = useNavigate();
 
   const [result, setResult] = useState(null);
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   
   // Playback state
@@ -29,12 +31,23 @@ export const BattleSim = () => {
   const autoPlayTimer = useRef(null);
 
   useEffect(() => {
-    // Generate or fetch the battle result
-    simulateBattle(sessionId)
-      .then(setResult)
+    // Generate or fetch the battle result and draft session
+    Promise.all([
+      simulateBattle(sessionId),
+      getDraft(sessionId).catch(() => null)
+    ])
+      .then(([resData, sessData]) => {
+        setResult(resData);
+        setSession(sessData);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [sessionId]);
+
+  const p1Id = session?.players[0]?.id || 'player1';
+  const p2Id = session?.players[1]?.id || 'player2';
+  const p1Name = session?.players[0]?.name || 'Player 1';
+  const p2Name = session?.players[1]?.name || 'Player 2';
 
   // Recalculate running score whenever roundIdx changes
   useEffect(() => {
@@ -43,12 +56,12 @@ export const BattleSim = () => {
     let sB = 0;
     for (let i = 0; i < roundIdx; i++) {
       const w = result.rounds[i].winner;
-      if (w === 'player1') sA++;
-      else if (w === 'player2') sB++;
+      if (w === p1Id || w === 'player1') sA++;
+      else if (w === p2Id || w === 'player2') sB++;
     }
     setRunningScoreA(sA);
     setRunningScoreB(sB);
-  }, [roundIdx, result]);
+  }, [roundIdx, result, p1Id, p2Id]);
 
   const advanceState = useCallback(() => {
     if (!result) return;
@@ -58,8 +71,8 @@ export const BattleSim = () => {
       if (prev === PHASES.REVEAL) {
         // Update score for the current round immediately when moving to END
         const currentWinner = result.rounds[roundIdx].winner;
-        if (currentWinner === 'player1') setRunningScoreA(s => s + 1);
-        else if (currentWinner === 'player2') setRunningScoreB(s => s + 1);
+        if (currentWinner === p1Id || currentWinner === 'player1') setRunningScoreA(s => s + 1);
+        else if (currentWinner === p2Id || currentWinner === 'player2') setRunningScoreB(s => s + 1);
         return PHASES.END;
       }
       if (prev === PHASES.END) {
@@ -72,7 +85,7 @@ export const BattleSim = () => {
       }
       return prev;
     });
-  }, [result, roundIdx]);
+  }, [result, roundIdx, p1Id, p2Id]);
 
   const resetRound = useCallback(() => {
     setPhase(PHASES.INTRO);
@@ -146,9 +159,9 @@ export const BattleSim = () => {
         </div>
         
         <div className="flex items-center gap-8 text-2xl font-black font-mono">
-          <div className="text-blue-400">Player 1: {runningScoreA}</div>
+          <div className="text-blue-400">{p1Name}: {runningScoreA}</div>
           <div className="text-gray-500 text-lg">VS</div>
-          <div className="text-red-400">CPU: {runningScoreB}</div>
+          <div className="text-red-400">{p2Name}: {runningScoreB}</div>
         </div>
         
         <div className="flex gap-2">
@@ -170,8 +183,8 @@ export const BattleSim = () => {
           {/* Player 1 Character */}
           <div className="flex flex-col items-center w-1/3">
             <div className={`w-48 h-64 bg-gray-900 border-4 rounded-xl flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden relative
-                ${phase === PHASES.END && round.winner === 'player1' ? 'border-blue-500 scale-105 shadow-[0_0_30px_rgba(59,130,246,0.6)]' : 'border-gray-700'}
-                ${phase === PHASES.END && round.winner === 'player2' ? 'opacity-50 grayscale' : ''}
+                ${phase === PHASES.END && (round.winner === p1Id || round.winner === 'player1') ? 'border-blue-500 scale-105 shadow-[0_0_30px_rgba(59,130,246,0.6)]' : 'border-gray-700'}
+                ${phase === PHASES.END && (round.winner === p2Id || round.winner === 'player2') ? 'opacity-50 grayscale' : ''}
               `}>
                 {round.charA?.imageUrl ? (
                   <img src={round.charA.imageUrl} alt={round.charA.name} className="w-full h-full object-cover" />
@@ -182,7 +195,7 @@ export const BattleSim = () => {
                 )}
             </div>
             <h3 className="text-2xl font-bold mt-4">{round.charA?.name || 'Missing'}</h3>
-            <div className={`text-4xl font-black mt-2 transition-opacity duration-300 ${hideStats && phase !== PHASES.END ? 'opacity-0' : 'opacity-100'} ${phase === PHASES.END && round.winner === 'player1' ? 'text-blue-400' : 'text-gray-300'}`}>
+            <div className={`text-4xl font-black mt-2 transition-opacity duration-300 ${hideStats && phase !== PHASES.END ? 'opacity-0' : 'opacity-100'} ${phase === PHASES.END && (round.winner === p1Id || round.winner === 'player1') ? 'text-blue-400' : 'text-gray-300'}`}>
               {round.statA}
             </div>
           </div>
@@ -203,8 +216,8 @@ export const BattleSim = () => {
               <div className="flex flex-col items-center bg-gray-900 border border-gray-700 px-8 py-4 rounded-full shadow-2xl animate-bounce">
                 <span className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Winner</span>
                 <span className={`text-2xl font-black uppercase tracking-wider
-                  ${round.winner === 'player1' ? 'text-blue-400' : round.winner === 'player2' ? 'text-red-400' : 'text-gray-400'}`}>
-                  {round.winner === 'tie' ? 'TIE - NO POINT' : (round.winner === 'player1' ? 'Player 1' : 'CPU')}
+                  ${(round.winner === p1Id || round.winner === 'player1') ? 'text-blue-400' : (round.winner === p2Id || round.winner === 'player2') ? 'text-red-400' : 'text-gray-400'}`}>
+                  {round.winner === 'tie' ? 'TIE - NO POINT' : ((round.winner === p1Id || round.winner === 'player1') ? p1Name : p2Name)}
                 </span>
               </div>
             )}
@@ -213,8 +226,8 @@ export const BattleSim = () => {
           {/* Player 2 Character */}
           <div className="flex flex-col items-center w-1/3">
             <div className={`w-48 h-64 bg-gray-900 border-4 rounded-xl flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden relative
-                ${phase === PHASES.END && round.winner === 'player2' ? 'border-red-500 scale-105 shadow-[0_0_30px_rgba(248,113,113,0.6)]' : 'border-gray-700'}
-                ${phase === PHASES.END && round.winner === 'player1' ? 'opacity-50 grayscale' : ''}
+                ${phase === PHASES.END && (round.winner === p2Id || round.winner === 'player2') ? 'border-red-500 scale-105 shadow-[0_0_30px_rgba(248,113,113,0.6)]' : 'border-gray-700'}
+                ${phase === PHASES.END && (round.winner === p1Id || round.winner === 'player1') ? 'opacity-50 grayscale' : ''}
               `}>
                 {round.charB?.imageUrl ? (
                   <img src={round.charB.imageUrl} alt={round.charB.name} className="w-full h-full object-cover" />
@@ -225,7 +238,7 @@ export const BattleSim = () => {
                 )}
             </div>
             <h3 className="text-2xl font-bold mt-4">{round.charB?.name || 'Missing'}</h3>
-            <div className={`text-4xl font-black mt-2 transition-opacity duration-300 ${hideStats && phase !== PHASES.END ? 'opacity-0' : 'opacity-100'} ${phase === PHASES.END && round.winner === 'player2' ? 'text-red-400' : 'text-gray-300'}`}>
+            <div className={`text-4xl font-black mt-2 transition-opacity duration-300 ${hideStats && phase !== PHASES.END ? 'opacity-0' : 'opacity-100'} ${phase === PHASES.END && (round.winner === p2Id || round.winner === 'player2') ? 'text-red-400' : 'text-gray-300'}`}>
               {round.statB}
             </div>
           </div>
@@ -271,10 +284,10 @@ export const BattleSim = () => {
           <div className="text-3xl font-bold uppercase tracking-widest mb-16 bg-gray-800 px-12 py-6 rounded-full border-2 border-gray-600 shadow-2xl">
             {result.overallWinner === 'tie' ? (
               <span className="text-gray-300">It's a Tie!</span>
-            ) : result.overallWinner === 'player1' ? (
-              <span className="text-blue-400 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200">Player 1 Wins!</span>
+            ) : (result.overallWinner === p1Id || result.overallWinner === 'player1') ? (
+              <span className="text-blue-400 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200">{p1Name} Wins!</span>
             ) : (
-              <span className="text-red-400 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-400">CPU Wins!</span>
+              <span className="text-red-400 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-400">{p2Name} Wins!</span>
             )}
           </div>
 

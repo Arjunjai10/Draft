@@ -14,9 +14,9 @@ router.post('/', async (req, res) => {
     const passesRemaining = {};
     const turnOrder = [];
 
-    // Simple alternating turn order for 1v1
-    const p1Id = 'player1';
-    const p2Id = 'player2';
+    // Alternating turn order for the players
+    const p1Id = (players && players[0] && players[0].id) ? players[0].id : 'player1';
+    const p2Id = (players && players[1] && players[1].id) ? players[1].id : 'player2';
     
     // Create 15 turns for each player (since there are 15 roles)
     for (let i = 0; i < 15; i++) {

@@ -1,33 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { fetchVerseBySlug, fetchCharacters } from '../api/verses';
 
 export const VerseDetail = () => {
   const { verseSlug } = useParams();
-  const navigate = useNavigate();
   const [verse, setVerse] = useState(null);
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
-  }, [verseSlug]);
-
-  const loadData = async () => {
+    let isMounted = true;
     setLoading(true);
-    try {
-      const verseData = await fetchVerseBySlug(verseSlug);
-      setVerse(verseData);
-      
-      const charData = await fetchCharacters(verseSlug);
-      setCharacters(charData);
-    } catch (err) {
+    
+    Promise.all([
+      fetchVerseBySlug(verseSlug),
+      fetchCharacters(verseSlug)
+    ]).then(([verseData, charData]) => {
+      if (isMounted) {
+        setVerse(verseData);
+        setCharacters(charData);
+      }
+    }).catch(err => {
       console.error('Failed to load verse data', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    }).finally(() => {
+      if (isMounted) setLoading(false);
+    });
+
+    return () => { isMounted = false; };
+  }, [verseSlug]);
 
   if (loading) {
     return (

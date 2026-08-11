@@ -134,8 +134,14 @@ export const LiveDraft = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-gray-900 text-gray-100">
-      <DraftHUD 
+    <div 
+      className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-gray-900 text-gray-100 bg-cover bg-center"
+      style={{ backgroundImage: 'url(/bg-landscape.png)' }}
+    >
+      <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
+      
+      <div className="relative z-10 flex flex-col h-full">
+        <DraftHUD 
         currentPlayer={currentPlayer} 
         passesRemaining={session.passesRemaining[currentPlayer?.id] || 0}
         isComplete={isComplete}
@@ -159,8 +165,8 @@ export const LiveDraft = () => {
             <RoleGrid 
               roles={verse.roles} 
               roster={mapRoster(p1Roster)} 
-              isSelectable={isPlayer1Turn && !!drawnCharacter}
-              onSelectRole={assignCharacter}
+              isSelectable={false}
+              onSelectRole={() => {}}
             />
           </div>
 
@@ -177,8 +183,8 @@ export const LiveDraft = () => {
             <RoleGrid 
               roles={verse.roles} 
               roster={mapRoster(p2Roster)} 
-              isSelectable={isPlayer2Turn && !!drawnCharacter && session.mode === 'local'} 
-              onSelectRole={assignCharacter}
+              isSelectable={false} 
+              onSelectRole={() => {}}
             />
           </div>
         </div>
@@ -215,8 +221,12 @@ export const LiveDraft = () => {
         onPass={passTurn}
         passesRemaining={session.passesRemaining[currentPlayer?.id] || 0}
         isCpuTurn={currentPlayer?.isCPU || (socket && currentPlayer?.id !== localPlayerId)}
+        roles={verse.roles}
+        openRoles={getOpenRoles(currentPlayer?.id)}
+        onAssign={assignCharacter}
       />
       <JoinDraftModal isOpen={showJoinModal} onJoin={handleJoinDraft} />
+    </div>
     </div>
   );
 };

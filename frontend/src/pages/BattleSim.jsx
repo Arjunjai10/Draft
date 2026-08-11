@@ -128,9 +128,14 @@ export const BattleSim = () => {
   const isBattleComplete = roundIdx === 14 && phase === PHASES.END;
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-gray-100 overflow-hidden relative">
+    <div 
+      className="flex flex-col h-screen bg-gray-900 text-gray-100 overflow-hidden relative bg-cover bg-center"
+      style={{ backgroundImage: 'url(/bg-landscape.png)' }}
+    >
+      <div className="absolute inset-0 bg-black/60 pointer-events-none z-0"></div>
+      
       {/* Header / Scoreboard */}
-      <div className="bg-gray-800 p-4 border-b border-gray-700 shadow-md flex justify-between items-center z-10">
+      <div className="bg-gray-900/90 backdrop-blur p-4 border-b border-gray-700 shadow-md flex justify-between items-center z-10">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition-colors">
             <LucideIcons.ArrowLeft />
@@ -164,11 +169,17 @@ export const BattleSim = () => {
           
           {/* Player 1 Character */}
           <div className="flex flex-col items-center w-1/3">
-            <div className={`w-48 h-64 bg-gray-800 border-4 rounded-xl flex items-center justify-center shadow-2xl transition-all duration-500
+            <div className={`w-48 h-64 bg-gray-900 border-4 rounded-xl flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden relative
                 ${phase === PHASES.END && round.winner === 'player1' ? 'border-blue-500 scale-105 shadow-[0_0_30px_rgba(59,130,246,0.6)]' : 'border-gray-700'}
                 ${phase === PHASES.END && round.winner === 'player2' ? 'opacity-50 grayscale' : ''}
               `}>
-               <span className="text-gray-500 font-bold uppercase tracking-widest">IMG</span>
+                {round.charA?.imageUrl ? (
+                  <img src={round.charA.imageUrl} alt={round.charA.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-800 text-white font-black text-6xl uppercase">
+                    {round.charA?.name?.substring(0, 2) || '?'}
+                  </div>
+                )}
             </div>
             <h3 className="text-2xl font-bold mt-4">{round.charA?.name || 'Missing'}</h3>
             <div className={`text-4xl font-black mt-2 transition-opacity duration-300 ${hideStats && phase !== PHASES.END ? 'opacity-0' : 'opacity-100'} ${phase === PHASES.END && round.winner === 'player1' ? 'text-blue-400' : 'text-gray-300'}`}>
@@ -201,11 +212,17 @@ export const BattleSim = () => {
 
           {/* Player 2 Character */}
           <div className="flex flex-col items-center w-1/3">
-            <div className={`w-48 h-64 bg-gray-800 border-4 rounded-xl flex items-center justify-center shadow-2xl transition-all duration-500
+            <div className={`w-48 h-64 bg-gray-900 border-4 rounded-xl flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden relative
                 ${phase === PHASES.END && round.winner === 'player2' ? 'border-red-500 scale-105 shadow-[0_0_30px_rgba(248,113,113,0.6)]' : 'border-gray-700'}
                 ${phase === PHASES.END && round.winner === 'player1' ? 'opacity-50 grayscale' : ''}
               `}>
-               <span className="text-gray-500 font-bold uppercase tracking-widest">IMG</span>
+                {round.charB?.imageUrl ? (
+                  <img src={round.charB.imageUrl} alt={round.charB.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-800 text-white font-black text-6xl uppercase">
+                    {round.charB?.name?.substring(0, 2) || '?'}
+                  </div>
+                )}
             </div>
             <h3 className="text-2xl font-bold mt-4">{round.charB?.name || 'Missing'}</h3>
             <div className={`text-4xl font-black mt-2 transition-opacity duration-300 ${hideStats && phase !== PHASES.END ? 'opacity-0' : 'opacity-100'} ${phase === PHASES.END && round.winner === 'player2' ? 'text-red-400' : 'text-gray-300'}`}>
@@ -216,7 +233,7 @@ export const BattleSim = () => {
       </div>
 
       {/* Controls Bar */}
-      <div className="bg-gray-800 p-4 border-t border-gray-700 flex justify-between items-center z-10">
+      <div className="bg-gray-900/90 backdrop-blur p-4 border-t border-gray-700 flex justify-between items-center z-10">
         <div className="flex gap-4">
            <button onClick={() => setIsAutoPlaying(p => !p)} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold uppercase text-sm">
              {isAutoPlaying ? <LucideIcons.Pause size={16} /> : <LucideIcons.Play size={16} />}

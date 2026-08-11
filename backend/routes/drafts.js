@@ -7,7 +7,7 @@ const router = express.Router();
 // POST /api/drafts
 router.post('/', async (req, res) => {
   try {
-    const { verseId, mode, players, passes } = req.body;
+    const { verseId, mode, players, passes, excludedCharacters } = req.body;
     
     // Initialize rosters and passes
     const rosters = {};
@@ -37,7 +37,8 @@ router.post('/', async (req, res) => {
       passesRemaining,
       turnOrder,
       currentTurnIndex: 0,
-      status: 'drafting'
+      status: 'drafting',
+      excludedCharacters: excludedCharacters || []
     });
 
     const savedSession = await session.save();

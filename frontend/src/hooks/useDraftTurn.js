@@ -53,7 +53,10 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   const drawCharacter = useCallback(() => {
     if (!session || isComplete || drawnCharacter || isCPUThinking || !isLocalTurn) return;
 
-    const availableCharacters = allCharacters.filter(c => !draftedCharacterIds.has(c._id));
+    const availableCharacters = allCharacters.filter(c => 
+      !draftedCharacterIds.has(c._id) && 
+      !(session.excludedCharacters || []).includes(c._id)
+    );
     if (availableCharacters.length === 0) {
       console.warn("No characters left to draw!");
       return;
@@ -150,7 +153,10 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   if (session?.mode === 'cpu' && !isComplete && currentPlayer?.isCPU && !isCPUThinking && !drawnCharacter) {
     setIsCPUThinking(true);
     setTimeout(() => {
-      const availableCharacters = allCharacters.filter(c => !draftedCharacterIds.has(c._id));
+      const availableCharacters = allCharacters.filter(c => 
+        !draftedCharacterIds.has(c._id) && 
+        !(session.excludedCharacters || []).includes(c._id)
+      );
       if (availableCharacters.length > 0) {
         const randomIndex = Math.floor(Math.random() * availableCharacters.length);
         const charToAssign = availableCharacters[randomIndex];

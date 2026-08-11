@@ -24,7 +24,8 @@ const draftSessionSchema = new mongoose.Schema({
   },
   turnOrder: [{ type: String }],
   currentTurnIndex: { type: Number, default: 0 },
-  status: { type: String, enum: ['pending', 'drafting', 'complete'], default: 'drafting' }
+  status: { type: String, enum: ['pending', 'drafting', 'complete'], default: 'drafting' },
+  excludedCharacters: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Character' }]
 }, {
   timestamps: true
 });

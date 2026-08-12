@@ -52,7 +52,7 @@ export const LiveDraft = () => {
   }, [verseSlug, sessionId, localPlayerId]);
 
   useEffect(() => {
-    if (!initialSession || initialSession.mode !== 'online' || !localPlayerId || showJoinModal) return;
+    if (!initialSession || !localPlayerId || showJoinModal) return;
 
     let token = localStorage.getItem(`draft_${sessionId}_token`);
     if (!token) {

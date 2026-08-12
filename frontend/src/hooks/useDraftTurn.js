@@ -18,9 +18,12 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   const isComplete = session?.status === 'complete';
   const currentPlayer = session?.players.find(p => p.id === currentTurnPlayerId);
 
-  const isSocketMode = (session?.mode === 'online' || session?.mode === 'tournament') && Boolean(socket);
-  // In local mode, both players are "local". In online/tournament socket mode, only the localPlayerId is "local"
-  const isLocalTurn = isSocketMode ? currentTurnPlayerId === localPlayerId : true;
+  const isSocketMode = Boolean(socket);
+  // In local/cpu mode, the single client window acts on behalf of all players.
+  // In online/tournament mode, only the localPlayerId is "local"
+  const isLocalTurn = (session?.mode === 'online' || session?.mode === 'tournament') 
+    ? currentTurnPlayerId === localPlayerId 
+    : true;
 
   // Socket listeners
   useEffect(() => {
@@ -175,12 +178,8 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
         setDrawnCharacter(charToAssign);
         
         setTimeout(() => {
-          const updatedRosters = { ...session.rosters };
-          if (!updatedRosters[currentPlayer.id]) updatedRosters[currentPlayer.id] = {};
-          updatedRosters[currentPlayer.id][bestRole] = charToAssign._id;
-          
-          setDraftedCharacterIds(prev => new Set(prev).add(charToAssign._id));
-          nextTurn(updatedRosters, session.passesRemaining);
+          // Use assignCharacter to ensure socket mode picks it up correctly
+          assignCharacter(bestRole, charToAssign._id);
         }, 1000);
       }
     }, 500);

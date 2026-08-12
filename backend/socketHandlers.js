@@ -101,7 +101,10 @@ export default (io) => {
         // Server-side enforcement of turn and token
         const token = socketTokens[socket.id];
         const player = session.players.find(p => p.token === token);
-        if (!player || player.id !== playerId) return socket.emit('error', 'Unauthorized');
+        if (!player) return socket.emit('error', 'Unauthorized');
+        if ((session.mode === 'online' || session.mode === 'tournament') && player.id !== playerId) {
+          return socket.emit('error', 'Unauthorized');
+        }
         if (session.turnOrder[session.currentTurnIndex] !== playerId) return;
 
         // Update roster
@@ -137,7 +140,10 @@ export default (io) => {
         // Server-side enforcement of turn and token
         const token = socketTokens[socket.id];
         const player = session.players.find(p => p.token === token);
-        if (!player || player.id !== playerId) return socket.emit('error', 'Unauthorized');
+        if (!player) return socket.emit('error', 'Unauthorized');
+        if ((session.mode === 'online' || session.mode === 'tournament') && player.id !== playerId) {
+          return socket.emit('error', 'Unauthorized');
+        }
         if (session.turnOrder[session.currentTurnIndex] !== playerId) return;
 
         const passes = session.passesRemaining.get(playerId) || 0;

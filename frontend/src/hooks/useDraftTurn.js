@@ -3,6 +3,13 @@ import { pickBestRoleForCharacter } from '../utils/cpuAI.js';
 
 export const useDraftTurn = (sessionData, allCharacters, socket = null, localPlayerId = null) => {
   const [session, setSession] = useState(sessionData);
+
+  useEffect(() => {
+    if (sessionData && !session) {
+      setSession(sessionData);
+    }
+  }, [sessionData]);
+
   const [draftedCharacterIds, setDraftedCharacterIds] = useState(new Set());
   const [drawnCharacter, setDrawnCharacter] = useState(null);
   const [isCPUThinking, setIsCPUThinking] = useState(false);

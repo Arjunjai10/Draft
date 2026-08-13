@@ -16,23 +16,21 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-hero-placeholder">
-        <nav className="p-4 bg-gray-800 flex gap-4 text-sm flex-wrap justify-center shadow-md">
-          <Link to="/" className="hover:text-blue-400">Home</Link>
-          <Link to="/draft/dbz" className="hover:text-blue-400">Draft Setup (DBZ)</Link>
-          <Link to="/draft/dbz/play" className="hover:text-blue-400">Live Draft</Link>
-          <Link to="/battle/123" className="hover:text-blue-400">Battle Sim</Link>
-          <Link to="/tournament" className="hover:text-blue-400">Tournament</Link>
-          <Link to="/gallery" className="hover:text-blue-400">Gallery</Link>
+        <nav className="p-4 bg-gray-900 text-white flex gap-6 text-sm flex-wrap justify-center shadow-lg border-b border-gray-700">
+          <Link to="/" className="hover:text-yellow-400 transition-colors">Home</Link>
+          <Link to="/setup/dbz" className="hover:text-yellow-400 transition-colors">Local Draft (DBZ)</Link>
+          <Link to="/tournament" className="hover:text-yellow-400 transition-colors">Tournaments</Link>
+          <Link to="/gallery" className="hover:text-yellow-400 transition-colors">Gallery</Link>
         </nav>
         
         <main className="container mx-auto p-4">
           <Routes>
             <Route path="/" element={<Landing />} />
             
-            <Route path="/draft/:verseSlug" element={<DraftSetup />} />
-            <Route path="/draft/:verseSlug/play" element={<LiveDraft />} />
+            <Route path="/setup/:verseSlug" element={<DraftSetup />} />
+            <Route path="/draft/:draftId" element={<LiveDraft />} />
             
-            <Route path="/battle/:sessionId" element={<BattleSim />} />
+            <Route path="/battle/:draftId" element={<BattleSim />} />
             
             <Route path="/tournament" element={<TournamentLanding />} />
             <Route path="/tournament/host" element={<TournamentHost />} />

@@ -13,6 +13,8 @@ export const DraftSetup = () => {
   
   const [mode, setMode] = useState('cpu');
   const [passes, setPasses] = useState(10);
+  const [draftStyle, setDraftStyle] = useState('standard');
+  const [maxPower, setMaxPower] = useState('no-limit');
   const [excludedCharacterIds, setExcludedCharacterIds] = useState(new Set());
   const [showExcludeModal, setShowExcludeModal] = useState(false);
   
@@ -55,7 +57,7 @@ export const DraftSetup = () => {
 
       const draft = await createDraft(draftConfig);
       localStorage.setItem(`draft_${draft._id}_playerId`, 'player1');
-      navigate(`/draft/${verseSlug}/play?session=${draft._id}`);
+      navigate(`/draft/${draft._id}`);
     } catch (err) {
       console.error(err);
     }
@@ -70,148 +72,158 @@ export const DraftSetup = () => {
     });
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-400">Loading verse...</div>;
-  if (!verse) return <div className="p-8 text-center text-red-500">Verse not found</div>;
+  if (loading) return <div className="min-h-screen bg-gray-900 flex items-center justify-center p-8 text-center text-gray-400">Loading...</div>;
+  if (!verse) return <div className="min-h-screen bg-gray-900 flex items-center justify-center p-8 text-center text-red-500">Verse not found</div>;
 
   const poolSize = characters.length - excludedCharacterIds.size;
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+    <div className="relative min-h-screen bg-gray-900 overflow-hidden flex flex-col items-center justify-center font-sans text-white p-4">
+      <div className="absolute inset-0 bg-gradient-to-tr from-purple-900 via-gray-900 to-blue-900 opacity-60 z-0"></div>
+
       {/* Main Setup Card */}
-      <div className="bg-gray-900 border border-gray-700 rounded-xl max-w-3xl w-full p-8 shadow-2xl relative overflow-hidden">
+      <div className="relative z-10 bg-gray-900 bg-opacity-80 backdrop-blur-xl border border-gray-700 rounded-3xl max-w-2xl w-full p-10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
         
         {/* Header */}
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <h2 className="text-4xl font-black text-white tracking-tight">{verse.name} Draft</h2>
-            <div className="flex items-center gap-4 mt-2">
-              <span className="text-gray-400">Player 1 vs</span>
-              <select 
-                value={mode} 
-                onChange={e => setMode(e.target.value)}
-                className="bg-gray-800 border border-gray-700 text-blue-400 px-3 py-1 rounded font-bold text-sm"
-              >
-                <option value="cpu">CPU (Medium)</option>
-                <option value="local">Local Player</option>
-                <option value="online">Online Friend</option>
-              </select>
-            </div>
-          </div>
-          <button onClick={() => navigate('/')} className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded flex items-center gap-2 transition-colors">
-            <LucideIcons.ArrowLeft size={18} /> Back
+        <div className="flex justify-between items-center mb-8 border-b border-gray-700 pb-6">
+          <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition-colors">
+            <LucideIcons.ArrowLeft size={24} />
           </button>
-        </div>
-
-        {/* Roles */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-white">Roles</h3>
-            <span className="bg-fuchsia-700 text-white px-4 py-1 rounded-full text-sm font-bold">
-              {verse.roles.length} Roles
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {verse.roles.map(r => (
-              <span key={r.key} className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-full text-sm font-semibold text-gray-300">
-                {r.name}
-              </span>
-            ))}
-          </div>
+          <h2 className="text-3xl font-black italic tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600">
+            Draft Setup
+          </h2>
+          <div className="w-6"></div> {/* Spacer for centering */}
         </div>
 
         {/* Config Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-gray-950 p-4 rounded-lg border border-gray-800 flex flex-col">
-            <label className="text-gray-400 text-sm font-semibold mb-2">Passes (1-10)</label>
-            <select 
-              value={passes} 
-              onChange={e => setPasses(e.target.value)}
-              className="bg-gray-800 border border-gray-700 text-white rounded p-2 mt-auto w-full"
-            >
-              {[...Array(10)].map((_, i) => (
-                <option key={i+1} value={i+1}>{i+1}</option>
-              ))}
-            </select>
+        <div className="space-y-6 mb-10">
+          <div className="grid grid-cols-2 gap-6">
+             <div className="flex flex-col gap-2">
+               <label className="text-gray-400 text-sm font-bold uppercase tracking-wider">Opponent</label>
+               <select 
+                 value={mode} 
+                 onChange={e => setMode(e.target.value)}
+                 className="bg-gray-800 border border-gray-600 focus:border-yellow-500 text-white p-3 rounded-xl appearance-none outline-none font-semibold transition-colors"
+               >
+                 <option value="cpu">CPU (Medium)</option>
+                 <option value="local">Local Player</option>
+                 <option value="online">Online Friend</option>
+               </select>
+             </div>
+             
+             <div className="flex flex-col gap-2">
+               <label className="text-gray-400 text-sm font-bold uppercase tracking-wider">Passes</label>
+               <select 
+                 value={passes} 
+                 onChange={e => setPasses(e.target.value)}
+                 className="bg-gray-800 border border-gray-600 focus:border-yellow-500 text-white p-3 rounded-xl appearance-none outline-none font-semibold transition-colors"
+               >
+                 {[...Array(10)].map((_, i) => (
+                   <option key={i+1} value={i+1}>{i+1}</option>
+                 ))}
+               </select>
+             </div>
+
+             <div className="flex flex-col gap-2">
+               <label className="text-gray-400 text-sm font-bold uppercase tracking-wider">Draft Style</label>
+               <select 
+                 value={draftStyle} 
+                 onChange={e => setDraftStyle(e.target.value)}
+                 className="bg-gray-800 border border-gray-600 focus:border-yellow-500 text-white p-3 rounded-xl appearance-none outline-none font-semibold transition-colors"
+               >
+                 <option value="standard">Standard</option>
+                 <option value="snake">Snake</option>
+               </select>
+             </div>
+
+             <div className="flex flex-col gap-2">
+               <label className="text-gray-400 text-sm font-bold uppercase tracking-wider">Max Team Power</label>
+               <select 
+                 value={maxPower} 
+                 onChange={e => setMaxPower(e.target.value)}
+                 className="bg-gray-800 border border-gray-600 focus:border-yellow-500 text-white p-3 rounded-xl appearance-none outline-none font-semibold transition-colors"
+               >
+                 <option value="no-limit">No Limit</option>
+                 <option value="balanced">Balanced</option>
+                 <option value="competitive">Competitive</option>
+               </select>
+             </div>
           </div>
-          
-          <div className="bg-gray-950 p-4 rounded-lg border border-gray-800 flex flex-col">
-            <label className="text-gray-400 text-sm font-semibold mb-2">Character Pool</label>
-            <div className="text-4xl font-black text-white mt-auto">{poolSize}</div>
-          </div>
-          
-          <div className="bg-gray-950 p-4 rounded-lg border border-gray-800 flex flex-col justify-end">
-            <button 
-              onClick={() => setShowExcludeModal(true)}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-bold transition-colors"
-            >
-              Exclude Characters
-            </button>
+
+          <div className="bg-gray-800 bg-opacity-50 border border-gray-700 rounded-xl p-4 flex justify-between items-center mt-4">
+             <div>
+               <h3 className="font-bold text-white tracking-wide">Excluded Characters</h3>
+               <p className="text-sm text-gray-400">{excludedCharacterIds.size} excluded • {poolSize} in pool</p>
+             </div>
+             <button 
+               onClick={() => setShowExcludeModal(true)}
+               className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-bold transition-colors"
+             >
+               Edit
+             </button>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <button className="py-4 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
-            <LucideIcons.BookOpen size={20} /> Tutorial
-          </button>
-          <button onClick={() => navigate(`/gallery/${verseSlug}`)} className="py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
-            <LucideIcons.Image size={20} /> Gallery
-          </button>
-          <button onClick={handleStartDraft} className="py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
-            <LucideIcons.Play size={20} /> Start Draft
-          </button>
-        </div>
+        {/* Action Button */}
+        <button 
+          onClick={handleStartDraft} 
+          className="w-full py-4 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-xl font-black text-xl uppercase tracking-widest shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all transform hover:scale-[1.02]"
+        >
+          Start Draft
+        </button>
       </div>
 
       {/* Exclude Characters Modal */}
       {showExcludeModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl max-w-4xl w-full h-[80vh] flex flex-col shadow-2xl">
-            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl max-w-5xl w-full h-[85vh] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-800 bg-opacity-50 rounded-t-2xl">
               <div>
-                <h3 className="text-2xl font-black text-white">Exclude Characters</h3>
+                <h3 className="text-2xl font-black italic tracking-wide text-white uppercase">Exclude Characters</h3>
                 <p className="text-gray-400 text-sm mt-1">Select characters to remove from the draft pool.</p>
               </div>
-              <button onClick={() => setShowExcludeModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowExcludeModal(false)} className="text-gray-400 hover:text-white p-2">
                 <LucideIcons.X size={24} />
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 bg-gray-900">
               {characters.map(char => {
                 const isExcluded = excludedCharacterIds.has(char._id);
                 return (
                   <div 
                     key={char._id}
                     onClick={() => toggleExclude(char._id)}
-                    className={`cursor-pointer rounded-lg p-2 border-2 transition-all text-center
-                      ${isExcluded ? 'border-red-500 bg-red-950/30 opacity-50' : 'border-gray-800 hover:border-gray-600 bg-gray-800'}`}
+                    className={`cursor-pointer rounded-xl p-2 border-2 transition-all text-center relative group
+                      ${isExcluded ? 'border-red-500 bg-red-950/20' : 'border-gray-800 hover:border-gray-600 bg-gray-800'}`}
                   >
-                    <div className="w-16 h-16 mx-auto bg-gray-900 rounded-full mb-2 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden relative">
+                    <div className="w-16 h-16 mx-auto rounded-full mb-2 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden relative border-2 border-gray-700 group-hover:border-gray-500 transition-colors">
                       {char.imageUrl ? (
                         <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="uppercase text-lg">{char.name.substring(0, 2)}</span>
+                        <span className="uppercase text-lg text-gray-600">{char.name.substring(0, 2)}</span>
                       )}
                       {isExcluded && (
-                         <div className="absolute inset-0 bg-red-500/50 flex items-center justify-center backdrop-blur-[1px]">
-                           <LucideIcons.Ban className="text-white drop-shadow-md" size={24} />
+                         <div className="absolute inset-0 bg-red-500/60 flex items-center justify-center backdrop-blur-[2px]">
+                           <LucideIcons.Ban className="text-white drop-shadow-lg" size={24} />
                          </div>
                       )}
                     </div>
-                    <div className="text-xs font-bold text-gray-300 truncate">{char.name}</div>
+                    <div className={`text-[10px] font-bold uppercase tracking-wider truncate ${isExcluded ? 'text-red-400' : 'text-gray-300'}`}>
+                      {char.name}
+                    </div>
                   </div>
                 );
               })}
             </div>
             
-            <div className="p-6 border-t border-gray-800 flex justify-between items-center bg-gray-950 rounded-b-xl">
-               <span className="text-gray-400 font-bold">{excludedCharacterIds.size} Excluded</span>
+            <div className="p-6 border-t border-gray-800 flex justify-between items-center bg-gray-900 rounded-b-2xl">
+               <span className="text-yellow-500 font-bold tracking-wide text-sm">{excludedCharacterIds.size} Excluded</span>
                <button 
                  onClick={() => setShowExcludeModal(false)}
-                 className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold"
+                 className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold tracking-wide uppercase transition-colors"
                >
-                 Done
+                 Confirm Pool
                </button>
             </div>
           </div>

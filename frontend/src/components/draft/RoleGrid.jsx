@@ -1,46 +1,38 @@
 import React from 'react';
-import * as LucideIcons from 'lucide-react';
 
 const RoleSlot = ({ role, character, isOpen, onClick }) => {
-  const Icon = LucideIcons[role.icon] || LucideIcons.Circle;
-  
+  if (isOpen) {
+    return (
+      <button 
+        onClick={onClick}
+        className="relative px-2 py-3 rounded-2xl flex items-center justify-center transition-colors bg-black/40 hover:bg-black/60 text-white shadow-inner"
+      >
+        <span className="text-xs font-medium tracking-wider">{role.name || role.label}</span>
+      </button>
+    );
+  }
+
+  // Filled State
   return (
-    <div 
-      onClick={isOpen ? onClick : undefined}
-      className={`relative p-2 border-2 rounded-md flex items-center justify-between h-16 transition-colors
-        ${isOpen 
-          ? 'border-dashed border-gray-600 hover:border-blue-500 cursor-pointer bg-gray-800/50' 
-          : 'border-solid border-gray-700 bg-gray-800'}`}
-    >
-      <div className="flex items-center gap-3 w-full">
-        <div className={`p-2 rounded-full ${isOpen ? 'bg-gray-700' : 'bg-blue-900/50'}`}>
-          <Icon size={20} className={isOpen ? 'text-gray-400' : 'text-blue-400'} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-400 uppercase font-bold tracking-wider truncate">{role.label}</p>
-          {character ? (
-            <p className="text-sm font-semibold text-gray-100 truncate">{character.name}</p>
-          ) : (
-            <p className="text-sm text-gray-500 italic">Empty</p>
-          )}
-        </div>
-        {character && (
-          <div className="w-10 h-10 bg-gray-700 rounded-md shrink-0 flex items-center justify-center overflow-hidden border border-gray-600">
-            {/* Placeholder portrait */}
-            <span className="text-xs font-bold text-gray-400">IMG</span>
-          </div>
+    <div className="relative p-3 rounded-2xl flex flex-col items-center justify-center bg-black/60 backdrop-blur-md border border-white/10 shadow-lg h-32 text-center transition-all">
+      <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/20 mb-2 bg-gray-800 shadow-md flex-shrink-0">
+        {character?.imageUrl ? (
+          <img src={character.imageUrl} alt={character?.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">IMG</div>
         )}
       </div>
+      <p className="text-sm font-bold text-white leading-tight mb-0.5 line-clamp-1 w-full px-1">{character?.name}</p>
+      <p className="text-[10px] text-gray-400 italic w-full px-1 truncate">{role.name || role.label}</p>
     </div>
   );
 };
 
 export const RoleGrid = ({ roles, roster, onSelectRole, isSelectable }) => {
   return (
-    <div className="grid grid-cols-1 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {roles.map(role => {
         const charId = roster[role.key];
-        // We need to pass the actual character object here, so let's assume roster is now a map of roleKey -> Character Object for UI purposes
         const character = charId; 
         const isOpen = !character;
         

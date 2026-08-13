@@ -154,7 +154,7 @@ export const DraftSetup = () => {
           <button className="py-4 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
             <LucideIcons.BookOpen size={20} /> Tutorial
           </button>
-          <button onClick={() => navigate(`/verse/${verseSlug}`)} className="py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
+          <button onClick={() => navigate(`/gallery/${verseSlug}`)} className="py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
             <LucideIcons.Image size={20} /> Gallery
           </button>
           <button onClick={handleStartDraft} className="py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">

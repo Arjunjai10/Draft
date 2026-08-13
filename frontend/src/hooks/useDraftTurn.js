@@ -30,7 +30,10 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
     if (!socket || !isSocketMode) return;
 
     const handleUpdate = (updatedSession) => {
-      setSession(updatedSession);
+      setSession(prev => ({
+        ...updatedSession,
+        verse: prev?.verse || updatedSession.verse
+      }));
       // Rebuild drafted set from updated rosters
       const newDrafted = new Set();
       Object.values(updatedSession.rosters || {}).forEach(roster => {

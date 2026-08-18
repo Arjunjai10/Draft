@@ -150,57 +150,61 @@ export const LiveDraft = () => {
         </button>
       </div>
 
-      <div className="relative z-10 flex flex-col items-center justify-start pt-12 h-full">
+      <div className="relative z-10 flex flex-col items-center justify-start pt-16 h-full">
         {/* Status Area */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-black/60 backdrop-blur-sm border border-white/10 rounded-full px-6 py-2 text-white font-bold flex items-center gap-2 shadow-xl">
-            <span className="text-orange-400">⚡</span> 
-            Current Player: <span className="text-blue-400">{currentPlayer?.name || 'Waiting...'}</span> 
-            <span className="text-orange-400">⚡</span>
-          </div>
-          <div className="text-4xl font-black text-white/80 mt-4 tracking-widest drop-shadow-lg">
-            <span className="text-blue-400/80">⚔️</span> VS <span className="text-red-400/80">⚔️</span>
+        <div className="flex flex-col items-center mb-6 absolute top-8 left-1/2 -translate-x-1/2 z-30">
+          <div className="bg-gray-900 bg-opacity-90 backdrop-blur-md border border-gray-700 rounded-full px-8 py-3 text-white font-black uppercase tracking-widest text-sm flex items-center gap-3 shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+            <span className="text-yellow-500 animate-pulse">●</span> 
+            {currentPlayer?.name || 'Waiting...'} <span className="text-gray-400 text-xs">is picking...</span>
           </div>
         </div>
       
-      <div className="flex-1 w-full max-w-5xl mx-auto px-4 z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 justify-center">
+      <div className="flex-1 w-full h-full flex flex-col md:flex-row relative z-10">
+        
+        {/* VS Divider */}
+        <div className="hidden md:flex absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-px bg-gradient-to-b from-transparent via-gray-600 to-transparent items-center justify-center z-20">
+           <div className="bg-gray-900 border-2 border-gray-700 text-white font-black italic text-2xl w-16 h-16 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,0,0,1)] z-30">
+             VS
+           </div>
+        </div>
           {/* Player 1 Column */}
-          <fieldset className="border border-blue-500/50 rounded-xl p-4 bg-black/20 backdrop-blur-sm shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-            <legend className="px-3 text-white font-bold ml-4">
-              {player1.name}
+          <div className="flex-1 p-4 md:p-8 overflow-y-auto pb-32">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-black text-white uppercase tracking-wider">{player1.name}</h3>
               {currentPlayer?.id === player1.id && !isComplete && (
-                <span className="ml-2 px-2 py-0.5 bg-blue-600/30 text-blue-400 text-[10px] font-bold rounded uppercase tracking-wider animate-pulse">
-                  Drafting
+                <span className="px-3 py-1 bg-green-900 bg-opacity-50 text-green-400 text-xs font-bold rounded-full uppercase tracking-wider animate-pulse border border-green-700">
+                  Your Turn
                 </span>
               )}
-            </legend>
+            </div>
             <RoleGrid 
               roles={verse.roles} 
               roster={mapRoster(p1Roster)} 
               isSelectable={false}
               onSelectRole={() => {}}
             />
-          </fieldset>
+          </div>
 
           {/* Player 2 Column */}
-          <fieldset className="border border-white/30 rounded-xl p-4 bg-black/20 backdrop-blur-sm">
-            <legend className="px-3 text-white font-bold ml-4 flex items-center gap-2">
-              {player2.name}
-              {player2.isCPU && <span className="bg-blue-600 text-[10px] px-2 py-0.5 rounded-full">CPU (hard)</span>}
-              {currentPlayer?.id === player2.id && !isComplete && (
-                <span className="ml-2 px-2 py-0.5 bg-red-600/30 text-red-400 text-[10px] font-bold rounded uppercase tracking-wider animate-pulse">
-                  Drafting
-                </span>
-              )}
-            </legend>
+          <div className="flex-1 p-4 md:p-8 overflow-y-auto pb-32">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-black text-white uppercase tracking-wider">{player2.name}</h3>
+              <div className="flex items-center gap-2">
+                {player2.isCPU && <span className="bg-gray-800 border border-gray-600 text-gray-400 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">CPU</span>}
+                {currentPlayer?.id === player2.id && !isComplete && (
+                  <span className="px-3 py-1 bg-red-900 bg-opacity-50 text-red-400 text-xs font-bold rounded-full uppercase tracking-wider animate-pulse border border-red-700">
+                    Drafting
+                  </span>
+                )}
+              </div>
+            </div>
             <RoleGrid 
               roles={verse.roles} 
               roster={mapRoster(p2Roster)} 
               isSelectable={false} 
               onSelectRole={() => {}}
             />
-          </fieldset>
+          </div>
         </div>
       </div>
 

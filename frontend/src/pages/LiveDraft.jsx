@@ -8,15 +8,14 @@ import { CharacterDrawModal } from '../components/draft/CharacterDrawModal';
 import { useDraftTurn } from '../hooks/useDraftTurn';
 import { HowItWorksModal } from '../components/reference/HowItWorksModal';
 import { SettingsModal } from '../components/settings/SettingsModal';
-import { JoinDraftModal } from '../components/draft/JoinDraftModal';
 import { OnlineInviteOverlay } from '../components/draft/OnlineInviteOverlay';
 import { io } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
 
 export const LiveDraft = () => {
-  const { verseSlug } = useParams();
+  const { draftId } = useParams();
   const [searchParams] = useSearchParams();
-  const sessionId = searchParams.get('session');
+  const sessionId = draftId;
   const role = searchParams.get('role');
   const navigate = useNavigate();
   
@@ -30,29 +29,61 @@ export const LiveDraft = () => {
   // Online Mode States
   const [socket, setSocket] = useState(null);
   const [localPlayerId, setLocalPlayerId] = useState(localStorage.getItem(`draft_${sessionId}_playerId`) || null);
-  const [showJoinModal, setShowJoinModal] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
   const [draftAbandoned, setDraftAbandoned] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      fetchVerseBySlug(verseSlug),
-      fetchCharacters(verseSlug),
-      getDraft(sessionId)
-    ]).then(([v, chars, sess]) => {
-      setVerse(v);
-      setCharacters(chars);
-      setInitialSession({ ...sess, verse: v });
-      
-      if (sess.mode === 'online' && !localPlayerId && role !== 'spectator') {
-        setShowJoinModal(true);
-      }
-      setLoading(false);
-    }).catch(console.error);
-  }, [verseSlug, sessionId, localPlayerId]);
+    if (!sessionId) return;
+    getDraft(sessionId)
+      .then(sess => {
+        // Since the backend might not be restarted and verseId is just a string,
+        // we'll fetch all verses to find the matching one to get the slug.
+        import('../api/verses').then(({ fetchVerses, fetchCharacters }) => {
+          fetchVerses().then(verses => {
+            const verseObj = typeof sess.verseId === 'object' ? sess.verseId : verses.find(v => v._id === sess.verseId);
+            
+            if (!verseObj) {
+              console.error("Verse not found for ID:", sess.verseId);
+              return;
+            }
+            
+            setVerse(verseObj);
+            setInitialSession({ ...sess, verse: verseObj, verseId: verseObj._id });
+            
+            return fetchCharacters(verseObj.slug).then(chars => {
+              setCharacters(chars);
+              
+              if (sess.mode === 'tournament' && !localPlayerId) {
+                const tourneyToken = localStorage.getItem(`tournament_${sess.tournamentId}_token`);
+                const me = sess.players.find(p => p.token === tourneyToken);
+                if (me) {
+                  setLocalPlayerId(me.id);
+                  localStorage.setItem(`draft_${sessionId}_playerId`, me.id);
+                  localStorage.setItem(`draft_${sessionId}_token`, me.token);
+                  localStorage.setItem(`draft_${sessionId}_playerName`, me.name);
+                }
+              }
+
+              if (sess.mode === 'online' && !localPlayerId && role !== 'spectator') {
+                // If they are not authenticated, redirect them to the join code page
+                if (sess.status === 'pending') {
+                  navigate('/join');
+                } else {
+                  navigate('/'); // Or somewhere else
+                }
+                return;
+              }
+              
+              setLoading(false);
+            });
+          });
+        });
+      })
+      .catch(console.error);
+  }, [sessionId, localPlayerId]);
 
   useEffect(() => {
-    if (!initialSession || !localPlayerId || showJoinModal) return;
+    if (!initialSession || !localPlayerId) return;
 
     let token = localStorage.getItem(`draft_${sessionId}_token`);
     if (!token) {
@@ -60,8 +91,7 @@ export const LiveDraft = () => {
       localStorage.setItem(`draft_${sessionId}_token`, token);
     }
     
-    // Default fallback to 'Player 1' if not set, but JoinDraftModal forces user to set one
-    const playerName = localPlayerId === 'player1' ? 'Player 1' : localStorage.getItem(`draft_${sessionId}_playerName`) || 'Player 2';
+    const playerName = localStorage.getItem(`draft_${sessionId}_playerName`) || (localPlayerId === 'player1' ? 'Player 1' : 'Player 2');
 
     const newSocket = io(import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000');
     
@@ -80,14 +110,9 @@ export const LiveDraft = () => {
     return () => {
       newSocket.disconnect();
     };
-  }, [initialSession, sessionId, localPlayerId, showJoinModal]);
+  }, [initialSession, sessionId, localPlayerId]);
 
-  const handleJoinDraft = (name) => {
-    localStorage.setItem(`draft_${sessionId}_playerId`, 'player2');
-    localStorage.setItem(`draft_${sessionId}_playerName`, name);
-    setLocalPlayerId('player2');
-    setShowJoinModal(false);
-  };
+
 
   const {
     session,
@@ -118,7 +143,7 @@ export const LiveDraft = () => {
     return fullRoster;
   };
 
-  if (draftAbandoned) {
+  if (draftAbandoned && !isComplete) {
     return (
       <div className="flex flex-col h-screen items-center justify-center bg-gray-900 p-4 text-center">
         <h2 className="text-3xl font-black text-red-500 uppercase tracking-widest mb-4">Opponent Abandoned</h2>
@@ -208,7 +233,7 @@ export const LiveDraft = () => {
         </div>
       </div>
 
-      {opponentDisconnected && (
+      {opponentDisconnected && !isComplete && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-gray-700 p-8 rounded-lg shadow-2xl text-center">
             <h2 className="text-2xl font-black text-yellow-500 uppercase tracking-widest mb-2">Opponent Disconnected</h2>
@@ -217,8 +242,8 @@ export const LiveDraft = () => {
         </div>
       )}
 
-      {session.mode === 'online' && session.players.length === 1 && localPlayerId === 'player1' && !showJoinModal && role !== 'spectator' && (
-        <OnlineInviteOverlay />
+      {session.mode === 'online' && session.players.length === 1 && localPlayerId === 'player1' && role !== 'spectator' && (
+        <OnlineInviteOverlay session={session} />
       )}
 
       {/* Draw Action Area - Fixed at bottom */}
@@ -247,7 +272,21 @@ export const LiveDraft = () => {
       
       <div className="absolute bottom-4 right-4 z-20 flex gap-2">
         {isComplete && (
-          <button onClick={() => navigate(`/battle/${session._id}`)} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-xs shadow-lg transition-colors">
+          <button 
+            onClick={async () => {
+              try {
+                if (session.mode === 'cpu' || session.mode === 'local') {
+                  const { updateDraft } = await import('../api/drafts');
+                  await updateDraft(session._id, { status: 'complete', rosters: session.rosters });
+                }
+                navigate(`/battle/${session._id}`);
+              } catch (e) {
+                console.error('Failed to sync draft to backend:', e);
+                alert('Please restart your backend server (npm run dev) so the new API route is loaded!');
+              }
+            }} 
+            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-xs shadow-lg transition-colors"
+          >
             Simulate Battle
           </button>
         )}
@@ -266,10 +305,8 @@ export const LiveDraft = () => {
         openRoles={getOpenRoles(currentPlayer?.id)}
         onAssign={assignCharacter}
       />
-      <JoinDraftModal isOpen={showJoinModal} onJoin={handleJoinDraft} />
       <HowItWorksModal isOpen={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
-    </div>
     </div>
   );
 };

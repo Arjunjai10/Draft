@@ -106,9 +106,9 @@ router.post('/:draftId/simulate', async (req, res) => {
               if (nextMatchIndex !== -1) {
                 const nextMatch = tournament.bracket[nextMatchIndex];
                 if (!nextMatch.p1 || !nextMatch.p1.id) {
-                  nextMatch.p1 = { id: winningPlayer.id, name: winningPlayer.name };
+                  nextMatch.p1 = { id: winningPlayer.id, name: winningPlayer.name, token: winningPlayer.token };
                 } else if (!nextMatch.p2 || !nextMatch.p2.id) {
-                  nextMatch.p2 = { id: winningPlayer.id, name: winningPlayer.name };
+                  nextMatch.p2 = { id: winningPlayer.id, name: winningPlayer.name, token: winningPlayer.token };
                 }
                 
                 // If both p1 and p2 are now present, init the next DraftSession

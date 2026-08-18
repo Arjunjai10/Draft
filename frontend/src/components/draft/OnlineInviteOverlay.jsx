@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import * as LucideIcons from 'lucide-react';
 
-export const OnlineInviteOverlay = () => {
+export const OnlineInviteOverlay = ({ session }) => {
   const [copied, setCopied] = useState(false);
-  const inviteLink = window.location.href;
+  const inviteCode = session?.joinCode || window.location.href;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(inviteLink);
+    navigator.clipboard.writeText(inviteCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -16,14 +16,14 @@ export const OnlineInviteOverlay = () => {
       <div className="bg-gray-900 border border-gray-700 p-8 rounded-lg max-w-md w-full shadow-2xl text-center">
         <LucideIcons.Users size={48} className="mx-auto text-blue-500 mb-4" />
         <h2 className="text-2xl font-black text-white uppercase tracking-widest mb-2">Waiting for Player 2</h2>
-        <p className="text-gray-400 mb-6">Share this link with a friend so they can join the draft.</p>
+        <p className="text-gray-400 mb-6">Share this 6-character code with a friend so they can join.</p>
         
         <div className="flex bg-gray-800 rounded border border-gray-700 p-2 items-center mb-4">
           <input 
             type="text" 
             readOnly 
-            value={inviteLink} 
-            className="bg-transparent text-gray-300 w-full focus:outline-none text-sm px-2"
+            value={inviteCode} 
+            className="bg-transparent text-gray-300 w-full focus:outline-none text-center text-2xl font-black tracking-[0.5em] px-2"
           />
           <button 
             onClick={handleCopy}

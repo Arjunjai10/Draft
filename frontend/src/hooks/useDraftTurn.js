@@ -18,7 +18,7 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   const isComplete = session?.status === 'complete';
   const currentPlayer = session?.players.find(p => p.id === currentTurnPlayerId);
 
-  const isSocketMode = Boolean(socket);
+  const isSocketMode = Boolean(socket) && (session?.mode === 'online' || session?.mode === 'tournament');
   // In local/cpu mode, the single client window acts on behalf of all players.
   // In online/tournament mode, only the localPlayerId is "local"
   const isLocalTurn = (session?.mode === 'online' || session?.mode === 'tournament') 
@@ -49,11 +49,13 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
 
     socket.on('draft:state', handleUpdate);
     socket.on('draft:update', handleUpdate);
+    socket.on('draft:joined', ({ session }) => handleUpdate(session));
     socket.on('draft:draw', handleDraw);
 
     return () => {
       socket.off('draft:state', handleUpdate);
       socket.off('draft:update', handleUpdate);
+      socket.off('draft:joined');
       socket.off('draft:draw', handleDraw);
     };
   }, [socket, isSocketMode]);
@@ -163,30 +165,46 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
     drawCharacter(); // Redraw immediately
   }, [currentTurnPlayerId, session, drawCharacter, isLocalTurn, socket, isSocketMode]);
 
-  // CPU auto-turn logic (only if mode is 'cpu')
-  if (session?.mode === 'cpu' && !isComplete && currentPlayer?.isCPU && !isCPUThinking && !drawnCharacter) {
-    setIsCPUThinking(true);
-    setTimeout(() => {
-      const availableCharacters = allCharacters.filter(c => 
-        !draftedCharacterIds.has(c._id) && 
-        !(session.excludedCharacters || []).includes(c._id)
-      );
-      if (availableCharacters.length > 0) {
-        const randomIndex = Math.floor(Math.random() * availableCharacters.length);
-        const charToAssign = availableCharacters[randomIndex];
-        
+  // CPU auto-turn state machine
+  
+  // 1. When it becomes CPU's turn and no character is drawn, start thinking
+  useEffect(() => {
+    if (session?.mode === 'cpu' && !isComplete && currentPlayer?.isCPU && !drawnCharacter && !isCPUThinking) {
+      setIsCPUThinking(true);
+    }
+  }, [session?.mode, isComplete, currentPlayer?.isCPU, drawnCharacter, isCPUThinking]);
+
+  // 2. When CPU is thinking and no character is drawn, draw a character after 500ms
+  useEffect(() => {
+    if (session?.mode === 'cpu' && !isComplete && currentPlayer?.isCPU && isCPUThinking && !drawnCharacter) {
+      const timer = setTimeout(() => {
+        const availableCharacters = allCharacters.filter(c => 
+          !draftedCharacterIds.has(c._id) && 
+          !(session.excludedCharacters || []).includes(c._id)
+        );
+        if (availableCharacters.length > 0) {
+          const randomIndex = Math.floor(Math.random() * availableCharacters.length);
+          const charToAssign = availableCharacters[randomIndex];
+          setDrawnCharacter(charToAssign);
+        } else {
+          setIsCPUThinking(false); // Failsafe
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [session?.mode, isComplete, currentPlayer?.isCPU, isCPUThinking, drawnCharacter, allCharacters, draftedCharacterIds, session?.excludedCharacters]);
+
+  // 3. When CPU is thinking and character IS drawn, assign it after 1000ms
+  useEffect(() => {
+    if (session?.mode === 'cpu' && !isComplete && currentPlayer?.isCPU && isCPUThinking && drawnCharacter) {
+      const timer = setTimeout(() => {
         const openRoles = getOpenRoles(currentPlayer.id);
-        const bestRole = pickBestRoleForCharacter(charToAssign, openRoles);
-        
-        setDrawnCharacter(charToAssign);
-        
-        setTimeout(() => {
-          // Use assignCharacter to ensure socket mode picks it up correctly
-          assignCharacter(bestRole, charToAssign._id);
-        }, 1000);
-      }
-    }, 500);
-  }
+        const bestRole = pickBestRoleForCharacter(drawnCharacter, openRoles);
+        assignCharacter(bestRole);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [session?.mode, isComplete, currentPlayer?.isCPU, currentPlayer?.id, isCPUThinking, drawnCharacter, assignCharacter]);
 
   return {
     session,

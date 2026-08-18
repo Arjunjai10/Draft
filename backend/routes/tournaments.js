@@ -52,7 +52,10 @@ router.post('/:code/join', async (req, res) => {
       tournament.players.push({ id: nextId, name: playerName, token: playerToken });
       await tournament.save();
       
-      // Notify lobby via socket if we had a dedicated lobby socket, but we can rely on polling or we'll just return it
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`tournament_${tournament._id}`).emit('tournament:bracketUpdate', tournament);
+      }
     }
 
     res.json(tournament);
@@ -117,7 +120,11 @@ router.post('/:id/start', async (req, res) => {
     tournament.status = 'in_progress';
     await tournament.save();
 
-    // The frontend should broadcast a socket event to tell everyone the tournament started
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`tournament_${tournament._id}`).emit('tournament:bracketUpdate', tournament);
+    }
+
     res.json(tournament);
   } catch (err) {
     res.status(500).json({ error: err.message });

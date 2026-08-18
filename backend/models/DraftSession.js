@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const draftSessionSchema = new mongoose.Schema({
   verseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Verse', required: true },
   tournamentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tournament' },
+  joinCode: { type: String, unique: true, sparse: true, uppercase: true },
   mode: { type: String, enum: ['cpu', 'local', 'online', 'tournament'], required: true },
   players: [{
     id: { type: String, required: true },

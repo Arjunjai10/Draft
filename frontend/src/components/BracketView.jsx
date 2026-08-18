@@ -29,17 +29,17 @@ export const BracketView = ({ tournament }) => {
       statusColor = 'text-green-500';
       canAction = true;
       actionText = 'View Result';
-      actionUrl = `/draft/${tournament.verseId}/simulate?session=${match.draftId}`; // Or a new route
+      actionUrl = `/battle/${match.draftId}`;
     } else if (match.p1 && match.p2 && match.draftId) {
       statusText = 'Live';
       statusColor = 'text-red-500 animate-pulse';
       canAction = true;
       if (isMyMatch) {
         actionText = 'Play Match';
-        actionUrl = `/draft/${tournament.verseId}/play?session=${match.draftId}`;
+        actionUrl = `/draft/${match.draftId}`;
       } else {
         actionText = 'Spectate';
-        actionUrl = `/draft/${tournament.verseId}/play?session=${match.draftId}&role=spectator`;
+        actionUrl = `/draft/${match.draftId}?role=spectator`;
       }
     }
 

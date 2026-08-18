@@ -15,3 +15,13 @@ export const getDraft = async (id) => {
   if (!res.ok) throw new Error('Failed to get draft');
   return res.json();
 };
+
+export const updateDraft = async (id, updateData) => {
+  const res = await fetch(`${API_URL}/api/drafts/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updateData)
+  });
+  if (!res.ok) throw new Error('Failed to update draft');
+  return res.json();
+};

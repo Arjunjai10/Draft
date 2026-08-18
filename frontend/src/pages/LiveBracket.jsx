@@ -64,7 +64,9 @@ export const LiveBracket = () => {
   if (error) return <div className="p-8 text-red-500 font-bold">{error}</div>;
   if (!tournament) return null;
 
-  const isHost = tournament.hostId === myToken;
+  const hostToken = localStorage.getItem(`tournament_${id}_hostToken`);
+  const amIFirstPlayer = tournament.players?.length > 0 && tournament.players[0].token === myToken;
+  const isHost = tournament.hostId === myToken || tournament.hostId === hostToken || amIFirstPlayer;
 
   if (tournament.status === 'pending') {
     return (

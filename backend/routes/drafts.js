@@ -29,15 +29,25 @@ router.post('/', async (req, res) => {
     passesRemaining[p1Id] = passes || 10;
     passesRemaining[p2Id] = passes || 10;
 
+    const generateCode = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    };
+
     const session = new DraftSession({
       verseId,
       mode,
+      joinCode: mode === 'online' ? generateCode() : undefined,
       players,
       rosters,
       passesRemaining,
       turnOrder,
       currentTurnIndex: 0,
-      status: 'drafting',
+      status: mode === 'online' ? 'pending' : 'drafting',
       excludedCharacters: excludedCharacters || []
     });
 
@@ -51,9 +61,61 @@ router.post('/', async (req, res) => {
 // GET /api/drafts/:id
 router.get('/:id', async (req, res) => {
   try {
-    const session = await DraftSession.findById(req.params.id);
+    const session = await DraftSession.findById(req.params.id).populate('verseId');
     if (!session) return res.status(404).json({ error: 'Session not found' });
     res.json(session);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/drafts/join/:code
+router.post('/join/:code', async (req, res) => {
+  try {
+    const { playerName, playerToken } = req.body;
+    const session = await DraftSession.findOne({ joinCode: req.params.code.toUpperCase() });
+    
+    if (!session) return res.status(404).json({ error: 'Battle code not found.' });
+    if (session.status !== 'pending') return res.status(400).json({ error: 'This battle has already started or is closed.' });
+    if (session.players.length >= 2) return res.status(400).json({ error: 'This battle is full.' });
+
+    // Check if player already in session (unlikely for new joins, but safe)
+    if (!session.players.find(p => p.token === playerToken)) {
+      session.players.push({ id: 'player2', name: playerName, token: playerToken });
+      
+      // If 2 players are now here, move status to drafting
+      if (session.players.length === 2) {
+        session.status = 'drafting';
+      }
+      
+      await session.save();
+      
+      // We don't necessarily need to broadcast here because LiveDraft handles draft:join
+      // But we can rely on LiveDraft's socket logic to connect and emit 'draft:join'
+    }
+
+    res.json(session);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/drafts/:id
+router.put('/:id', async (req, res) => {
+  try {
+    const session = await DraftSession.findById(req.params.id);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    
+    if (req.body.status) session.status = req.body.status;
+    if (req.body.rosters) {
+      session.rosters = new Map();
+      Object.entries(req.body.rosters).forEach(([playerId, roster]) => {
+        session.rosters.set(playerId, new Map(Object.entries(roster)));
+      });
+    }
+    
+    const savedSession = await session.save();
+    res.json(savedSession);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

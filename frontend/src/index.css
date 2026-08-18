@@ -1,15 +1,334 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
-@theme {
-  --color-hero-placeholder: linear-gradient(to bottom, #111827, #1f2937, #374151);
+/* ─── Design Tokens ──────────────────────────────────────── */
+:root {
+  --bg-base:        #07070f;
+  --bg-surface:     #0f0f1a;
+  --bg-elevated:    #161625;
+  --bg-card:        rgba(22, 22, 37, 0.85);
+
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-dim:     rgba(255,255,255,0.12);
+  --border-glow:    rgba(108, 99, 255, 0.4);
+
+  --accent-indigo:  #6c63ff;
+  --accent-blue:    #4f8cff;
+  --accent-gold:    #fbbf24;
+  --accent-green:   #22c55e;
+  --accent-red:     #ef4444;
+  --accent-violet:  #c084fc;
+
+  --text-primary:   #eeeeff;
+  --text-muted:     #9ca3af;
+  --text-dim:       #4b5563;
+
+  --glow-indigo:    0 0 24px rgba(108,99,255,0.45);
+  --glow-blue:      0 0 24px rgba(79,140,255,0.45);
+  --glow-gold:      0 0 24px rgba(251,191,36,0.45);
+  --glow-green:     0 0 20px rgba(34,197,94,0.4);
+  --glow-violet:    0 0 24px rgba(192,132,252,0.45);
 }
 
+/* ─── Base Reset ─────────────────────────────────────────── */
 @layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-gray-900 text-gray-100 min-h-screen;
+    @apply min-h-screen;
+    font-family: 'Inter', 'Outfit', system-ui, sans-serif;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-surface);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--accent-indigo);
+    border-radius: 99px;
+    opacity: 0.5;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    opacity: 1;
+  }
+
+  ::selection {
+    background: rgba(108,99,255,0.35);
+    color: #fff;
+  }
+
+  /* Form element resets */
+  select, input, textarea {
+    outline: none;
+    font-family: inherit;
+  }
+
+  select option {
+    background-color: var(--bg-elevated);
+    color: var(--text-primary);
   }
 }
 
-.bg-hero-placeholder {
-  background-image: var(--color-hero-placeholder);
+/* ─── Utility / Component Classes ────────────────────────── */
+@layer utilities {
+  /* Glass panel */
+  .glass {
+    background: rgba(22, 22, 37, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .glass-heavy {
+    background: rgba(10, 10, 20, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border-dim);
+  }
+
+  /* Gradient text helpers */
+  .grad-indigo {
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .grad-gold {
+    background: linear-gradient(135deg, #fde68a, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .grad-blue {
+    background: linear-gradient(135deg, #60a5fa, #6c63ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .grad-green {
+    background: linear-gradient(135deg, #4ade80, #22d3ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow buttons */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.75rem;
+    border-radius: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+    background: linear-gradient(135deg, var(--accent-indigo), #818cf8);
+    color: #fff;
+    border: none;
+    box-shadow: var(--glow-indigo);
+    cursor: pointer;
+  }
+  .btn-primary:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 36px rgba(108,99,255,0.6);
+  }
+  .btn-primary:active { transform: scale(0.97); }
+
+  .btn-green {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.75rem;
+    border-radius: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    border: none;
+    box-shadow: var(--glow-green);
+    cursor: pointer;
+  }
+  .btn-green:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 36px rgba(34,197,94,0.55);
+  }
+  .btn-green:active { transform: scale(0.97); }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.75rem;
+    border-radius: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-dim);
+    cursor: pointer;
+  }
+  .btn-ghost:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-primary);
+    border-color: var(--border-glow);
+  }
+
+  /* Input field */
+  .input-field {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-dim);
+    border-radius: 0.75rem;
+    padding: 0.8rem 1rem;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-field:focus {
+    border-color: var(--accent-indigo);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+  }
+  .input-field::placeholder {
+    color: var(--text-dim);
+  }
+
+  /* Label */
+  .field-label {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  /* Ambient background orbs */
+  .orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+
+  /* Animated glow pulse */
+  @keyframes glow-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  .animate-glow {
+    animation: glow-pulse 2.5s ease-in-out infinite;
+  }
+
+  /* Float animation */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); }
+  }
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  /* Shimmer effect */
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+    background-size: 200% auto;
+    animation: shimmer 2.5s linear infinite;
+  }
+
+  /* Slide up entrance */
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up {
+    animation: slide-up 0.4s ease forwards;
+  }
+
+  /* Fade in */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.5s ease forwards;
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .badge-green {
+    background: rgba(34,197,94,0.15);
+    border: 1px solid rgba(34,197,94,0.3);
+    color: #4ade80;
+  }
+
+  .badge-gold {
+    background: rgba(251,191,36,0.15);
+    border: 1px solid rgba(251,191,36,0.3);
+    color: #fde68a;
+  }
+
+  .badge-blue {
+    background: rgba(79,140,255,0.15);
+    border: 1px solid rgba(79,140,255,0.3);
+    color: #93c5fd;
+  }
+
+  .badge-violet {
+    background: rgba(192,132,252,0.15);
+    border: 1px solid rgba(192,132,252,0.3);
+    color: #d8b4fe;
+  }
 }

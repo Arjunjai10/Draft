@@ -2,33 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { BracketView } from '../components/BracketView';
-import * as LucideIcons from 'lucide-react';
+import { Loader2, User, Copy, Check, Trophy, ChevronRight } from 'lucide-react';
 
 export const LiveBracket = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const myToken = localStorage.getItem(`tournament_${id}_token`);
 
   useEffect(() => {
-    // Initial fetch
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/tournaments/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Tournament not found');
         return res.json();
       })
-      .then(data => {
-        setTournament(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
+      .then(data => { setTournament(data); setLoading(false); })
+      .catch(err => { setError(err.message); setLoading(false); });
 
-    // Socket connection for live updates
     const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
     const socket = io(socketUrl);
 
@@ -43,91 +37,182 @@ export const LiveBracket = () => {
     return () => socket.disconnect();
   }, [id]);
 
-  const handleStart = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/tournaments/${id}/start`, {
-        method: 'POST'
+  const handleCopyCode = () => {
+    if (tournament?.code) {
+      navigator.clipboard.writeText(tournament.code).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
       });
-      const data = await res.json();
-      if (res.ok) {
-        setTournament(data);
-        // The server will also broadcast this, but we update locally just in case
-      } else {
-        alert(data.error);
-      }
-    } catch (err) {
-      console.error(err);
     }
   };
 
-  if (loading) return <div className="p-8 text-white">Loading tournament...</div>;
-  if (error) return <div className="p-8 text-red-500 font-bold">{error}</div>;
+  const handleStart = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/tournaments/${id}/start`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) setTournament(data);
+      else alert(data.error);
+    } catch (err) { console.error(err); }
+  };
+
+  if (loading) return (
+    <div style={{ minHeight: 'calc(100vh - 60px)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-base)' }}>
+      <Loader2 size={40} style={{ color: '#818cf8', animation: 'spin 1s linear infinite' }} />
+    </div>
+  );
+  if (error) return (
+    <div style={{ minHeight: 'calc(100vh - 60px)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-base)' }}>
+      <p style={{ color: '#ef4444', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.1rem' }}>{error}</p>
+    </div>
+  );
   if (!tournament) return null;
 
   const hostToken = localStorage.getItem(`tournament_${id}_hostToken`);
   const amIFirstPlayer = tournament.players?.length > 0 && tournament.players[0].token === myToken;
   const isHost = tournament.hostId === myToken || tournament.hostId === hostToken || amIFirstPlayer;
 
+  // ── LOBBY STATE ────────────────────────────────────────────────────
   if (tournament.status === 'pending') {
     return (
-      <div className="flex flex-col items-center min-h-[calc(100vh-64px)] p-8 bg-gray-900">
-        <div className="bg-gray-800 p-8 rounded-xl border border-gray-700 max-w-2xl w-full shadow-2xl">
-          <div className="flex justify-between items-start mb-8">
+      <div
+        style={{
+          minHeight: 'calc(100vh - 60px)',
+          backgroundColor: 'var(--bg-base)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem 1rem',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: '700px', height: '500px', borderRadius: '9999px', background: 'radial-gradient(circle, rgba(108,99,255,0.08) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+
+        <div
+          style={{
+            width: '100%', maxWidth: '560px',
+            background: 'rgba(15,15,26,0.92)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(108,99,255,0.2)',
+            borderRadius: '1.5rem',
+            padding: '2.5rem',
+            boxShadow: '0 0 40px rgba(108,99,255,0.1), 0 24px 60px rgba(0,0,0,0.5)',
+            animation: 'slide-up 0.4s ease forwards',
+            position: 'relative', zIndex: 10,
+          }}
+        >
+          {/* Lobby Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
             <div>
-              <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 uppercase tracking-widest mb-2">
+              <h1 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.6rem', background: 'linear-gradient(135deg, #818cf8, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '0.3rem' }}>
                 Tournament Lobby
               </h1>
-              <p className="text-gray-400">Waiting for players to join...</p>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem' }}>
+                Waiting for players to join…
+              </p>
             </div>
-            <div className="flex flex-col items-end">
-              <span className="text-gray-500 text-xs uppercase tracking-wider mb-1">Invite Code</span>
-              <div className="bg-gray-900 px-4 py-2 rounded border border-gray-700 font-mono text-3xl tracking-widest text-white shadow-inner">
+
+            {/* Invite Code */}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '0.4rem' }}>Invite Code</div>
+              <button
+                onClick={handleCopyCode}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  padding: '0.6rem 1rem', borderRadius: '0.75rem',
+                  background: 'rgba(108,99,255,0.12)', border: '1px solid rgba(108,99,255,0.3)',
+                  color: '#c4b5fd', cursor: 'pointer',
+                  fontFamily: 'Outfit, sans-serif', fontWeight: 900,
+                  fontSize: '1.4rem', letterSpacing: '0.2em',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(108,99,255,0.2)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(108,99,255,0.12)'; }}
+              >
                 {tournament.code}
-              </div>
+                {copied ? <Check size={16} style={{ color: '#4ade80' }} /> : <Copy size={16} style={{ opacity: 0.6 }} />}
+              </button>
             </div>
           </div>
 
-          <div className="mb-8">
-            <div className="flex justify-between items-end mb-4">
-              <h2 className="text-xl font-bold text-white uppercase tracking-wider">Players</h2>
-              <span className="text-gray-400 font-mono text-lg">{tournament.players.length} / {tournament.playerCount}</span>
+          {/* Player Slots */}
+          <div style={{ marginBottom: '1.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.875rem' }}>
+              <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Players</h2>
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.9rem', color: '#818cf8' }}>
+                {tournament.players.length} / {tournament.playerCount}
+              </span>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.625rem' }}>
               {Array.from({ length: tournament.playerCount }).map((_, i) => {
                 const p = tournament.players[i];
+                const isMe = p?.token === myToken;
                 return (
-                  <div key={i} className={`flex items-center gap-3 p-4 rounded border ${p ? 'bg-gray-700 border-gray-600' : 'bg-gray-900 border-gray-800 border-dashed'} transition-all`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${p ? 'bg-blue-600' : 'bg-gray-800'}`}>
-                      {p ? <LucideIcons.User size={20} className="text-white" /> : <span className="text-gray-600 text-sm">{i+1}</span>}
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.75rem',
+                      padding: '0.875rem',
+                      borderRadius: '0.875rem',
+                      background: p ? 'rgba(108,99,255,0.1)' : 'rgba(255,255,255,0.02)',
+                      border: p
+                        ? (isMe ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(108,99,255,0.25)')
+                        : '1px dashed rgba(255,255,255,0.1)',
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: p ? 'rgba(108,99,255,0.3)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: p ? '1px solid rgba(108,99,255,0.4)' : '1px solid rgba(255,255,255,0.08)' }}>
+                      {p ? <User size={16} style={{ color: isMe ? '#fde68a' : '#818cf8' }} /> : <span style={{ color: 'rgba(255,255,255,0.2)', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.8rem' }}>{i + 1}</span>}
                     </div>
-                    {p ? (
-                      <span className="text-white font-bold">{p.name} {p.token === myToken ? '(You)' : ''}</span>
-                    ) : (
-                      <span className="text-gray-600 italic">Waiting...</span>
-                    )}
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      {p ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.85rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                          {isMe && <span style={{ padding: '0.1rem 0.4rem', borderRadius: '9999px', background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fde68a', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.55rem', letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>You</span>}
+                        </div>
+                      ) : (
+                        <span style={{ color: 'rgba(255,255,255,0.2)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontStyle: 'italic' }}>Waiting…</span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {isHost && (
+          {/* Progress Bar */}
+          <div style={{ height: '4px', borderRadius: '9999px', background: 'rgba(255,255,255,0.06)', marginBottom: '1.5rem', overflow: 'hidden' }}>
+            <div style={{ height: '100%', borderRadius: '9999px', background: 'linear-gradient(90deg, #6c63ff, #c084fc)', width: `${(tournament.players.length / tournament.playerCount) * 100}%`, transition: 'width 0.4s ease', boxShadow: '0 0 10px rgba(108,99,255,0.5)' }} />
+          </div>
+
+          {/* Action Button */}
+          {isHost ? (
             <button
               onClick={handleStart}
               disabled={tournament.players.length !== tournament.playerCount}
-              className={`w-full py-4 rounded font-black uppercase tracking-widest text-lg transition-transform ${
-                tournament.players.length === tournament.playerCount
-                  ? 'bg-green-600 hover:bg-green-500 text-white hover:scale-[1.02] active:scale-95 cursor-pointer'
-                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              }`}
+              style={{
+                width: '100%', padding: '1rem', borderRadius: '0.875rem', border: 'none',
+                background: tournament.players.length === tournament.playerCount
+                  ? 'linear-gradient(135deg, #16a34a, #22c55e)'
+                  : 'rgba(255,255,255,0.06)',
+                color: tournament.players.length === tournament.playerCount ? '#fff' : 'rgba(255,255,255,0.25)',
+                fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.95rem',
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                cursor: tournament.players.length === tournament.playerCount ? 'pointer' : 'not-allowed',
+                boxShadow: tournament.players.length === tournament.playerCount ? '0 0 24px rgba(34,197,94,0.4)' : 'none',
+                transition: 'all 0.2s ease',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              }}
+              onMouseEnter={e => { if (tournament.players.length === tournament.playerCount) e.currentTarget.style.transform = 'scale(1.02)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
             >
-              {tournament.players.length === tournament.playerCount ? 'Start Tournament' : 'Waiting for full lobby...'}
+              <Trophy size={16} />
+              {tournament.players.length === tournament.playerCount ? 'Start Tournament' : `Waiting for ${tournament.playerCount - tournament.players.length} more…`}
             </button>
-          )}
-          {!isHost && (
-            <div className="w-full py-4 text-center text-gray-400 font-bold uppercase tracking-widest border border-gray-700 rounded bg-gray-900">
-              Waiting for Host to start...
+          ) : (
+            <div style={{ width: '100%', padding: '1rem', borderRadius: '0.875rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Waiting for host to start…
             </div>
           )}
         </div>
@@ -135,18 +220,32 @@ export const LiveBracket = () => {
     );
   }
 
+  // ── BRACKET STATE ──────────────────────────────────────────────────
   return (
-    <div className="flex flex-col min-h-[calc(100vh-64px)] bg-gray-900">
-      <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur sticky top-0 z-10">
-        <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 uppercase tracking-widest">
-          Tournament Bracket
+    <div style={{ minHeight: 'calc(100vh - 60px)', backgroundColor: 'var(--bg-base)' }}>
+      {/* Sticky bracket header */}
+      <div
+        style={{
+          position: 'sticky', top: '60px', zIndex: 20,
+          background: 'rgba(7,7,15,0.85)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          padding: '1rem 1.5rem',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}
+      >
+        <h1 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.2rem', background: 'linear-gradient(135deg, #60a5fa, #818cf8, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.04em' }}>
+          🏆 Tournament Bracket
         </h1>
-        <div className="text-gray-400 font-mono tracking-widest text-sm">
-          CODE: <span className="text-white bg-gray-800 px-2 py-1 rounded">{tournament.code}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'Outfit, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>
+          CODE:
+          <span style={{ fontWeight: 800, letterSpacing: '0.15em', color: '#c4b5fd', padding: '0.25rem 0.6rem', borderRadius: '0.5rem', background: 'rgba(108,99,255,0.15)', border: '1px solid rgba(108,99,255,0.25)' }}>
+            {tournament.code}
+          </span>
         </div>
       </div>
-      
-      <div className="flex-1 overflow-auto">
+
+      <div style={{ overflow: 'auto' }}>
         <BracketView tournament={tournament} />
       </div>
     </div>

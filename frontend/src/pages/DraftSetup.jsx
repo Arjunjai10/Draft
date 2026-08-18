@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchVerseBySlug, fetchCharacters } from '../api/verses';
 import { createDraft } from '../api/drafts';
-import * as LucideIcons from 'lucide-react';
+import { ArrowLeft, Loader2, Play, Ban, X, Sliders, Users, Cpu, Globe, Settings2 } from 'lucide-react';
+
+const MODE_OPTIONS = [
+  { val: 'cpu', label: 'vs CPU', sub: 'Medium difficulty', icon: <Cpu size={18} /> },
+  { val: 'local', label: 'Local', sub: 'Pass & play', icon: <Users size={18} /> },
+  { val: 'online', label: 'Online', sub: 'Invite a friend', icon: <Globe size={18} /> },
+];
 
 export const DraftSetup = () => {
   const { verseSlug } = useParams();
@@ -10,18 +16,18 @@ export const DraftSetup = () => {
   const [verse, setVerse] = useState(null);
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [mode, setMode] = useState('cpu');
   const [passes, setPasses] = useState(10);
   const [draftStyle, setDraftStyle] = useState('standard');
   const [maxPower, setMaxPower] = useState('no-limit');
   const [excludedCharacterIds, setExcludedCharacterIds] = useState(new Set());
   const [showExcludeModal, setShowExcludeModal] = useState(false);
-  
+
   useEffect(() => {
     Promise.all([
       fetchVerseBySlug(verseSlug),
-      fetchCharacters(verseSlug)
+      fetchCharacters(verseSlug),
     ]).then(([v, chars]) => {
       setVerse(v);
       setCharacters(chars);
@@ -32,29 +38,18 @@ export const DraftSetup = () => {
   const handleStartDraft = async () => {
     try {
       const draftConfig = {
-        verseId: verse._id,
-        mode,
+        verseId: verse._id, mode,
         players: [],
         passes: parseInt(passes, 10),
-        excludedCharacters: Array.from(excludedCharacterIds)
+        excludedCharacters: Array.from(excludedCharacterIds),
       };
-
       if (mode === 'cpu') {
-        draftConfig.players = [
-          { id: 'player1', name: 'Player 1' },
-          { id: 'cpu1', name: 'CPU', isCPU: true, cpuDifficulty: 'medium' }
-        ];
+        draftConfig.players = [{ id: 'player1', name: 'Player 1' }, { id: 'cpu1', name: 'CPU', isCPU: true, cpuDifficulty: 'medium' }];
       } else if (mode === 'local') {
-        draftConfig.players = [
-          { id: 'player1', name: 'Player 1' },
-          { id: 'player2', name: 'Player 2' }
-        ];
+        draftConfig.players = [{ id: 'player1', name: 'Player 1' }, { id: 'player2', name: 'Player 2' }];
       } else if (mode === 'online') {
-        draftConfig.players = [
-          { id: 'player1', name: 'Player 1' }
-        ];
+        draftConfig.players = [{ id: 'player1', name: 'Player 1' }];
       }
-
       const draft = await createDraft(draftConfig);
       localStorage.setItem(`draft_${draft._id}_playerId`, 'player1');
       navigate(`/draft/${draft._id}`);
@@ -72,159 +67,258 @@ export const DraftSetup = () => {
     });
   };
 
-  if (loading) return <div className="min-h-screen bg-gray-900 flex items-center justify-center p-8 text-center text-gray-400">Loading...</div>;
-  if (!verse) return <div className="min-h-screen bg-gray-900 flex items-center justify-center p-8 text-center text-red-500">Verse not found</div>;
+  if (loading) return (
+    <div style={{ minHeight: 'calc(100vh - 60px)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-base)' }}>
+      <Loader2 size={36} style={{ color: '#818cf8', animation: 'spin 1s linear infinite' }} />
+    </div>
+  );
+  if (!verse) return (
+    <div style={{ minHeight: 'calc(100vh - 60px)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-base)' }}>
+      <p style={{ color: '#ef4444', fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>Verse not found</p>
+    </div>
+  );
 
   const poolSize = characters.length - excludedCharacterIds.size;
 
   return (
-    <div className="relative min-h-screen bg-gray-900 overflow-hidden flex flex-col items-center justify-center font-sans text-white p-4">
-      <div className="absolute inset-0 bg-gradient-to-tr from-purple-900 via-gray-900 to-blue-900 opacity-60 z-0"></div>
+    <div
+      style={{
+        minHeight: 'calc(100vh - 60px)',
+        backgroundColor: 'var(--bg-base)',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem 1rem',
+      }}
+    >
+      {/* Ambient */}
+      <div style={{ position: 'absolute', top: '0%', left: '30%', width: '600px', height: '600px', borderRadius: '9999px', background: 'radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '0%', right: '20%', width: '500px', height: '500px', borderRadius: '9999px', background: 'radial-gradient(circle, rgba(251,191,36,0.06) 0%, transparent 70%)', filter: 'blur(70px)', pointerEvents: 'none' }} />
 
-      {/* Main Setup Card */}
-      <div className="relative z-10 bg-gray-900 bg-opacity-80 backdrop-blur-xl border border-gray-700 rounded-3xl max-w-2xl w-full p-10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-        
+      <div
+        style={{
+          width: '100%', maxWidth: '520px',
+          background: 'rgba(15,15,26,0.9)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(108,99,255,0.2)',
+          borderRadius: '1.5rem',
+          padding: '2.5rem',
+          boxShadow: '0 0 40px rgba(108,99,255,0.1), 0 24px 60px rgba(0,0,0,0.5)',
+          animation: 'slide-up 0.4s ease forwards',
+          position: 'relative',
+          zIndex: 10,
+        }}
+      >
         {/* Header */}
-        <div className="flex justify-between items-center mb-8 border-b border-gray-700 pb-6">
-          <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition-colors">
-            <LucideIcons.ArrowLeft size={24} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.625rem', padding: '0.5rem', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+          >
+            <ArrowLeft size={18} />
           </button>
-          <h2 className="text-3xl font-black italic tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600">
-            Draft Setup
-          </h2>
-          <div className="w-6"></div> {/* Spacer for centering */}
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.5rem', background: 'linear-gradient(135deg, #fde68a, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.04em' }}>
+              Draft Setup
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', marginTop: '0.2rem' }}>
+              {verse.name}
+            </p>
+          </div>
+          <div style={{ width: '34px' }} />
+        </div>
+
+        {/* Mode Selector */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: '0.75rem' }}>
+            Opponent
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+            {MODE_OPTIONS.map(opt => {
+              const active = mode === opt.val;
+              return (
+                <button
+                  key={opt.val}
+                  onClick={() => setMode(opt.val)}
+                  style={{
+                    padding: '0.875rem 0.5rem', borderRadius: '0.875rem',
+                    border: active ? '1px solid rgba(108,99,255,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                    background: active ? 'rgba(108,99,255,0.15)' : 'rgba(255,255,255,0.03)',
+                    color: active ? '#c4b5fd' : 'rgba(255,255,255,0.35)',
+                    cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+                    transition: 'all 0.2s ease',
+                    boxShadow: active ? '0 0 14px rgba(108,99,255,0.2)' : 'none',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.35rem' }}>{opt.icon}</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.78rem' }}>{opt.label}</div>
+                  <div style={{ fontSize: '0.6rem', opacity: 0.6, marginTop: '0.15rem' }}>{opt.sub}</div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Config Grid */}
-        <div className="space-y-6 mb-10">
-          <div className="grid grid-cols-2 gap-6">
-             <div className="flex flex-col gap-2">
-               <label className="text-gray-400 text-sm font-bold uppercase tracking-wider">Opponent</label>
-               <select 
-                 value={mode} 
-                 onChange={e => setMode(e.target.value)}
-                 className="bg-gray-800 border border-gray-600 focus:border-yellow-500 text-white p-3 rounded-xl appearance-none outline-none font-semibold transition-colors"
-               >
-                 <option value="cpu">CPU (Medium)</option>
-                 <option value="local">Local Player</option>
-                 <option value="online">Online Friend</option>
-               </select>
-             </div>
-             
-             <div className="flex flex-col gap-2">
-               <label className="text-gray-400 text-sm font-bold uppercase tracking-wider">Passes</label>
-               <select 
-                 value={passes} 
-                 onChange={e => setPasses(e.target.value)}
-                 className="bg-gray-800 border border-gray-600 focus:border-yellow-500 text-white p-3 rounded-xl appearance-none outline-none font-semibold transition-colors"
-               >
-                 {[...Array(10)].map((_, i) => (
-                   <option key={i+1} value={i+1}>{i+1}</option>
-                 ))}
-               </select>
-             </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+          {[
+            { label: 'Passes', val: passes, set: setPasses, opts: [...Array(10)].map((_, i) => ({ val: i + 1, label: i + 1 })) },
+            { label: 'Draft Style', val: draftStyle, set: setDraftStyle, opts: [{ val: 'standard', label: 'Standard' }, { val: 'snake', label: 'Snake' }] },
+            { label: 'Max Power', val: maxPower, set: setMaxPower, opts: [{ val: 'no-limit', label: 'No Limit' }, { val: 'balanced', label: 'Balanced' }, { val: 'competitive', label: 'Competitive' }] },
+          ].map(field => (
+            <div key={field.label}>
+              <label style={{ display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: '0.4rem' }}>{field.label}</label>
+              <select
+                value={field.val}
+                onChange={e => field.set(e.target.value)}
+                style={{
+                  width: '100%', padding: '0.7rem 0.875rem', borderRadius: '0.75rem',
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#eeeeff', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem',
+                  cursor: 'pointer', appearance: 'none',
+                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
+                  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center',
+                }}
+                onFocus={e => { e.target.style.borderColor = 'rgba(251,191,36,0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(251,191,36,0.08)'; }}
+                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+              >
+                {field.opts.map(o => <option key={o.val} value={o.val}>{o.label}</option>)}
+              </select>
+            </div>
+          ))}
 
-             <div className="flex flex-col gap-2">
-               <label className="text-gray-400 text-sm font-bold uppercase tracking-wider">Draft Style</label>
-               <select 
-                 value={draftStyle} 
-                 onChange={e => setDraftStyle(e.target.value)}
-                 className="bg-gray-800 border border-gray-600 focus:border-yellow-500 text-white p-3 rounded-xl appearance-none outline-none font-semibold transition-colors"
-               >
-                 <option value="standard">Standard</option>
-                 <option value="snake">Snake</option>
-               </select>
-             </div>
-
-             <div className="flex flex-col gap-2">
-               <label className="text-gray-400 text-sm font-bold uppercase tracking-wider">Max Team Power</label>
-               <select 
-                 value={maxPower} 
-                 onChange={e => setMaxPower(e.target.value)}
-                 className="bg-gray-800 border border-gray-600 focus:border-yellow-500 text-white p-3 rounded-xl appearance-none outline-none font-semibold transition-colors"
-               >
-                 <option value="no-limit">No Limit</option>
-                 <option value="balanced">Balanced</option>
-                 <option value="competitive">Competitive</option>
-               </select>
-             </div>
-          </div>
-
-          <div className="bg-gray-800 bg-opacity-50 border border-gray-700 rounded-xl p-4 flex justify-between items-center mt-4">
-             <div>
-               <h3 className="font-bold text-white tracking-wide">Excluded Characters</h3>
-               <p className="text-sm text-gray-400">{excludedCharacterIds.size} excluded • {poolSize} in pool</p>
-             </div>
-             <button 
-               onClick={() => setShowExcludeModal(true)}
-               className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-bold transition-colors"
-             >
-               Edit
-             </button>
+          {/* Exclude Characters */}
+          <div>
+            <label style={{ display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: '0.4rem' }}>
+              Character Pool
+            </label>
+            <button
+              onClick={() => setShowExcludeModal(true)}
+              style={{
+                width: '100%', padding: '0.7rem 0.875rem', borderRadius: '0.75rem',
+                background: excludedCharacterIds.size > 0 ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.04)',
+                border: excludedCharacterIds.size > 0 ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.1)',
+                color: excludedCharacterIds.size > 0 ? '#fca5a5' : 'rgba(255,255,255,0.45)',
+                fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s',
+              }}
+            >
+              <Settings2 size={14} />
+              {excludedCharacterIds.size > 0 ? `${excludedCharacterIds.size} excluded` : `${poolSize} in pool`}
+            </button>
           </div>
         </div>
 
-        {/* Action Button */}
-        <button 
-          onClick={handleStartDraft} 
-          className="w-full py-4 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-xl font-black text-xl uppercase tracking-widest shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all transform hover:scale-[1.02]"
+        {/* Pool info line */}
+        <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)', marginBottom: '1.5rem' }} />
+
+        {/* Start CTA */}
+        <button
+          onClick={handleStartDraft}
+          style={{
+            width: '100%', padding: '1rem', borderRadius: '0.875rem', border: 'none',
+            background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+            color: '#0a0a0f', fontFamily: 'Outfit, sans-serif', fontWeight: 900,
+            fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase',
+            cursor: 'pointer', boxShadow: '0 0 28px rgba(251,191,36,0.45)',
+            transition: 'all 0.2s ease',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 0 40px rgba(251,191,36,0.6)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(251,191,36,0.45)'; }}
+          onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.97)'; }}
+          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1.02)'; }}
         >
-          Start Draft
+          <Play size={18} fill="currentColor" /> Start Draft
         </button>
       </div>
 
       {/* Exclude Characters Modal */}
       {showExcludeModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl max-w-5xl w-full h-[85vh] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-            <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-800 bg-opacity-50 rounded-t-2xl">
+        <div
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '1rem',
+            animation: 'fade-in 0.2s ease forwards',
+          }}
+        >
+          <div
+            style={{
+              background: 'rgba(12,12,22,0.98)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '1.5rem',
+              width: '100%', maxWidth: '800px', maxHeight: '85vh',
+              display: 'flex', flexDirection: 'column',
+              boxShadow: '0 30px 80px rgba(0,0,0,0.8)',
+              animation: 'slide-up 0.3s ease forwards',
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 className="text-2xl font-black italic tracking-wide text-white uppercase">Exclude Characters</h3>
-                <p className="text-gray-400 text-sm mt-1">Select characters to remove from the draft pool.</p>
+                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.2rem', color: '#fff' }}>Exclude Characters</h3>
+                <p style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', marginTop: '0.2rem' }}>Click to toggle exclusion from the draft pool</p>
               </div>
-              <button onClick={() => setShowExcludeModal(false)} className="text-gray-400 hover:text-white p-2">
-                <LucideIcons.X size={24} />
+              <button onClick={() => setShowExcludeModal(false)} style={{ padding: '0.5rem', borderRadius: '0.625rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex' }}>
+                <X size={18} />
               </button>
             </div>
-            
-            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 bg-gray-900">
+
+            {/* Modal Grid */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '0.75rem' }}>
               {characters.map(char => {
                 const isExcluded = excludedCharacterIds.has(char._id);
                 return (
-                  <div 
+                  <div
                     key={char._id}
                     onClick={() => toggleExclude(char._id)}
-                    className={`cursor-pointer rounded-xl p-2 border-2 transition-all text-center relative group
-                      ${isExcluded ? 'border-red-500 bg-red-950/20' : 'border-gray-800 hover:border-gray-600 bg-gray-800'}`}
+                    style={{
+                      cursor: 'pointer', borderRadius: '0.875rem',
+                      padding: '0.75rem 0.5rem', textAlign: 'center',
+                      border: isExcluded ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                      background: isExcluded ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.03)',
+                      transition: 'all 0.18s ease',
+                    }}
                   >
-                    <div className="w-16 h-16 mx-auto rounded-full mb-2 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden relative border-2 border-gray-700 group-hover:border-gray-500 transition-colors">
+                    <div style={{ width: '52px', height: '52px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 0.5rem', border: isExcluded ? '2px solid rgba(239,68,68,0.5)' : '2px solid rgba(255,255,255,0.08)', background: '#0a0a0f', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {char.imageUrl ? (
-                        <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
+                        <img src={char.imageUrl} alt={char.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isExcluded ? 0.4 : 1 }} />
                       ) : (
-                        <span className="uppercase text-lg text-gray-600">{char.name.substring(0, 2)}</span>
+                        <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1rem', color: 'rgba(255,255,255,0.2)' }}>{char.name.substring(0, 2)}</span>
                       )}
                       {isExcluded && (
-                         <div className="absolute inset-0 bg-red-500/60 flex items-center justify-center backdrop-blur-[2px]">
-                           <LucideIcons.Ban className="text-white drop-shadow-lg" size={24} />
-                         </div>
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.5)' }}>
+                          <Ban size={20} style={{ color: '#fff' }} />
+                        </div>
                       )}
                     </div>
-                    <div className={`text-[10px] font-bold uppercase tracking-wider truncate ${isExcluded ? 'text-red-400' : 'text-gray-300'}`}>
+                    <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.62rem', letterSpacing: '0.02em', color: isExcluded ? '#fca5a5' : 'rgba(255,255,255,0.55)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {char.name}
                     </div>
                   </div>
                 );
               })}
             </div>
-            
-            <div className="p-6 border-t border-gray-800 flex justify-between items-center bg-gray-900 rounded-b-2xl">
-               <span className="text-yellow-500 font-bold tracking-wide text-sm">{excludedCharacterIds.size} Excluded</span>
-               <button 
-                 onClick={() => setShowExcludeModal(false)}
-                 className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold tracking-wide uppercase transition-colors"
-               >
-                 Confirm Pool
-               </button>
+
+            {/* Modal Footer */}
+            <div style={{ padding: '1.25rem 1.75rem', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.8rem', color: '#fca5a5' }}>
+                {excludedCharacterIds.size} excluded · {poolSize} in pool
+              </span>
+              <button
+                onClick={() => setShowExcludeModal(false)}
+                style={{ padding: '0.7rem 1.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #2563eb, #4f8cff)', color: '#fff', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 0 16px rgba(79,140,255,0.3)', transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+              >
+                Confirm Pool
+              </button>
             </div>
           </div>
         </div>
@@ -232,4 +326,3 @@ export const DraftSetup = () => {
     </div>
   );
 };
-

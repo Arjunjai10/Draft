@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import * as LucideIcons from 'lucide-react';
+import { ArrowLeft, Loader2, Image, CheckCircle, Zap, Users, Swords, Play, User } from 'lucide-react';
 import { fetchVerseBySlug, fetchCharacters } from '../api/verses';
 
 export const VerseDetail = () => {
@@ -11,118 +12,180 @@ export const VerseDetail = () => {
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    
     Promise.all([
       fetchVerseBySlug(verseSlug),
-      fetchCharacters(verseSlug)
+      fetchCharacters(verseSlug),
     ]).then(([verseData, charData]) => {
-      if (isMounted) {
-        setVerse(verseData);
-        setCharacters(charData);
-      }
-    }).catch(err => {
-      console.error('Failed to load verse data', err);
-    }).finally(() => {
-      if (isMounted) setLoading(false);
-    });
-
+      if (isMounted) { setVerse(verseData); setCharacters(charData); }
+    }).catch(err => console.error('Failed to load verse data', err))
+      .finally(() => { if (isMounted) setLoading(false); });
     return () => { isMounted = false; };
   }, [verseSlug]);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-64px)]">
-        <LucideIcons.Loader2 className="animate-spin text-green-500" size={48} />
+      <div style={{ minHeight: 'calc(100vh - 60px)', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'var(--bg-base)' }}>
+        <Loader2 size={44} style={{ color: '#22c55e', animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
 
   if (!verse) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-[calc(100vh-64px)]">
-        <h2 className="text-2xl text-red-500 mb-4">Verse not found</h2>
-        <Link to="/gallery" className="text-blue-400 hover:underline">Back to Gallery</Link>
+      <div style={{ minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', backgroundColor: 'var(--bg-base)', gap: '1rem' }}>
+        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.5rem', color: '#ef4444' }}>Verse not found</h2>
+        <Link to="/gallery" style={{ color: '#60a5fa', fontFamily: 'Inter, sans-serif', textDecoration: 'none' }}>← Back to Gallery</Link>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center min-h-[calc(100vh-64px)] p-8 max-w-6xl mx-auto w-full">
-      <Link to="/gallery" className="self-start flex items-center gap-2 text-gray-400 hover:text-white mb-6">
-        <LucideIcons.ArrowLeft size={20} /> Back to Gallery
-      </Link>
-      
-      <div className="w-full bg-gray-800 rounded-xl overflow-hidden shadow-lg mb-8 flex flex-col md:flex-row">
-        <div className="md:w-1/3 h-64 md:h-auto bg-gray-900 relative">
-          {verse.coverImages && verse.coverImages[0] ? (
-            <img src={verse.coverImages[0]} alt={verse.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex justify-center items-center text-gray-700">
-              <LucideIcons.Image size={64} />
-            </div>
-          )}
-          {verse.isOfficial && (
-            <div className="absolute top-4 right-4 bg-blue-500 text-white text-sm font-bold uppercase px-3 py-1 rounded shadow-md flex items-center gap-2">
-              <LucideIcons.CheckCircle size={16} /> Official
-            </div>
-          )}
-        </div>
-        
-        <div className="p-8 md:w-2/3 flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-start mb-4">
-              <h1 className="text-4xl font-black uppercase text-white">{verse.name}</h1>
-              <div className="flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-lg text-yellow-400 font-bold text-xl shadow-inner">
-                <LucideIcons.Zap size={24} /> {verse.powerScore || 0}
+    <div
+      style={{
+        minHeight: 'calc(100vh - 60px)',
+        backgroundColor: 'var(--bg-base)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Ambient bg */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '500px', background: 'radial-gradient(ellipse at 50% 0%, rgba(34,197,94,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem', position: 'relative', zIndex: 10 }}>
+        {/* Back link */}
+        <Link
+          to="/gallery"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+            color: 'rgba(255,255,255,0.4)', textDecoration: 'none',
+            fontFamily: 'Inter, sans-serif', fontSize: '0.82rem',
+            marginBottom: '1.75rem', transition: 'color 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#fff'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+        >
+          <ArrowLeft size={16} /> Back to Gallery
+        </Link>
+
+        {/* Hero Card */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            background: 'rgba(15,15,26,0.9)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '1.5rem',
+            overflow: 'hidden',
+            marginBottom: '2.5rem',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
+            animation: 'slide-up 0.4s ease forwards',
+          }}
+        >
+          {/* Cover Image */}
+          <div style={{ width: '340px', flexShrink: 0, background: '#0a0a0f', position: 'relative', minHeight: '260px' }}>
+            {verse.coverImages && verse.coverImages[0] ? (
+              <img src={verse.coverImages[0]} alt={verse.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            ) : (
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.1)', minHeight: '260px' }}>
+                <Image size={64} />
               </div>
-            </div>
-            
-            <p className="text-gray-300 text-lg mb-6 leading-relaxed">
-              {verse.description || "No description provided."}
-            </p>
-            
-            <div className="flex gap-6 mb-8 text-gray-400 font-semibold uppercase tracking-wider">
-              <div className="flex items-center gap-2">
-                <LucideIcons.Users size={20} /> {verse.characterCount} Characters
+            )}
+            {verse.isOfficial && (
+              <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.75rem', borderRadius: '9999px', background: 'rgba(79,140,255,0.9)', color: '#fff', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'Outfit, sans-serif' }}>
+                <CheckCircle size={12} /> Official
               </div>
-              <div className="flex items-center gap-2">
-                <LucideIcons.Swords size={20} /> {verse.roleCount} Roles
-              </div>
-            </div>
+            )}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(to top, rgba(15,15,26,0.9) 0%, transparent 100%)' }} />
           </div>
-          
-          <div className="flex gap-4">
-            <Link 
-              to={`/draft/${verse.slug}`}
-              className="flex-1 bg-green-600 hover:bg-green-500 text-white text-center py-4 rounded-lg font-black uppercase tracking-widest text-lg transition-colors flex justify-center items-center gap-2 shadow-md"
+
+          {/* Info */}
+          <div style={{ flex: 1, padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <h1 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '2.2rem', color: '#fff', lineHeight: 1.1 }}>{verse.name}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.9rem', borderRadius: '0.75rem', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', color: '#fde68a', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.2rem', boxShadow: '0 0 16px rgba(251,191,36,0.15)', flexShrink: 0 }}>
+                  <Zap size={20} /> {verse.powerScore || 0}
+                </div>
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+                {verse.description || 'No description provided.'}
+              </p>
+              <div style={{ display: 'flex', gap: '1.5rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 600 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Users size={16} /> {verse.characterCount} Characters</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Swords size={16} /> {verse.roleCount} Roles</span>
+              </div>
+            </div>
+
+            <Link
+              to={`/setup/${verse.slug}`}
+              style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
+                padding: '1rem 2rem', borderRadius: '0.875rem',
+                background: 'linear-gradient(135deg, #16a34a, #22c55e)',
+                color: '#fff', textDecoration: 'none',
+                fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.95rem',
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                boxShadow: '0 0 28px rgba(34,197,94,0.4)',
+                transition: 'all 0.2s ease',
+                marginTop: '1.5rem',
+                alignSelf: 'flex-start',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.boxShadow = '0 0 40px rgba(34,197,94,0.55)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(34,197,94,0.4)'; }}
             >
-              <LucideIcons.Play size={24} /> Start Draft
+              <Play size={18} fill="currentColor" /> Start Draft
             </Link>
           </div>
         </div>
-      </div>
 
-      <div className="w-full">
-        <h2 className="text-2xl font-bold uppercase text-white mb-6 border-b border-gray-700 pb-2">Characters</h2>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {characters.map(char => (
-            <div key={char._id} className="bg-gray-800 rounded-lg p-3 text-center border border-gray-700 hover:border-gray-500 transition-colors">
-              <div className="w-full aspect-square bg-gray-900 rounded-lg mb-3 overflow-hidden">
-                {char.imageUrl ? (
-                  <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex justify-center items-center text-gray-700">
-                    <LucideIcons.User size={32} />
+        {/* Character Grid */}
+        <div style={{ animation: 'slide-up 0.5s ease forwards' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.2rem', color: '#fff', letterSpacing: '0.04em' }}>
+              Characters
+              <span style={{ marginLeft: '0.6rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>({characters.length})</span>
+            </h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '0.75rem' }}>
+            {characters.map(char => (
+              <div
+                key={char._id}
+                style={{
+                  background: 'rgba(15,15,26,0.85)', borderRadius: '1rem',
+                  padding: '0.875rem 0.625rem', textAlign: 'center',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(8px)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = 'rgba(34,197,94,0.3)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 0 16px rgba(34,197,94,0.1)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 0.625rem', border: '2px solid rgba(255,255,255,0.08)', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {char.imageUrl ? (
+                    <img src={char.imageUrl} alt={char.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <User size={28} style={{ color: 'rgba(255,255,255,0.15)' }} />
+                  )}
+                </div>
+                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.72rem', color: '#eeeeff', letterSpacing: '0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{char.name}</h3>
+                {char.tags?.length > 0 && (
+                  <div style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', marginTop: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {char.tags.slice(0, 2).join(', ')}
                   </div>
                 )}
               </div>
-              <h3 className="font-bold text-white text-sm truncate">{char.name}</h3>
-              <div className="text-xs text-gray-500 mt-1 truncate">
-                {char.tags?.join(', ') || 'No tags'}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -47,26 +47,28 @@ export const BattleSim = () => {
   const p1Name = session?.players[0]?.name || 'Player 1';
   const p2Name = session?.players[1]?.name || 'Player 2';
 
+  // Single source of truth for running scores.
+  // Count all rounds before current roundIdx, plus the current round if it has been REVEALED (phase === END).
   useEffect(() => {
     if (!result) return;
     let sA = 0, sB = 0;
-    for (let i = 0; i < roundIdx; i++) {
-      const w = result.rounds[i].winner;
+    const countUpTo = phase === PHASES.END ? roundIdx + 1 : roundIdx;
+    for (let i = 0; i < countUpTo; i++) {
+      const w = result.rounds[i]?.winner;
       if (w === p1Id || w === 'player1') sA++;
       else if (w === p2Id || w === 'player2') sB++;
     }
     setRunningScoreA(sA);
     setRunningScoreB(sB);
-  }, [roundIdx, result, p1Id, p2Id]);
+  }, [roundIdx, phase, result, p1Id, p2Id]);
 
   const advanceState = useCallback(() => {
     if (!result) return;
+    // Scores are managed entirely by the useEffect above — do NOT touch them here.
     setPhase(prev => {
       if (prev === PHASES.INTRO) return PHASES.REVEAL;
       if (prev === PHASES.REVEAL) {
-        const currentWinner = result.rounds[roundIdx].winner;
-        if (currentWinner === p1Id || currentWinner === 'player1') setRunningScoreA(s => s + 1);
-        else if (currentWinner === p2Id || currentWinner === 'player2') setRunningScoreB(s => s + 1);
+        // Score update handled by useEffect watching phase
         return PHASES.END;
       }
       if (prev === PHASES.END) {
@@ -74,12 +76,12 @@ export const BattleSim = () => {
           setRoundIdx(r => r + 1);
           return PHASES.INTRO;
         } else {
-          return PHASES.END;
+          return PHASES.END; // Last round — stay at END (battle complete)
         }
       }
       return prev;
     });
-  }, [result, roundIdx, p1Id, p2Id]);
+  }, [result, roundIdx]);
 
   const resetRound = useCallback(() => { setPhase(PHASES.INTRO); }, []);
 
@@ -104,7 +106,7 @@ export const BattleSim = () => {
   }, [advanceState, resetRound, resetBattle]);
 
   useEffect(() => {
-    if (isAutoPlaying && phase !== PHASES.END || (isAutoPlaying && roundIdx < 14)) {
+    if (isAutoPlaying && phase !== PHASES.END || (isAutoPlaying && roundIdx < result.rounds.length - 1)) {
       autoPlayTimer.current = setTimeout(() => { advanceState(); }, SPEED_MAP[speed]);
     } else {
       clearTimeout(autoPlayTimer.current);
@@ -126,7 +128,7 @@ export const BattleSim = () => {
   );
 
   const round = result.rounds[roundIdx];
-  const isBattleComplete = roundIdx === 14 && phase === PHASES.END;
+  const isBattleComplete = roundIdx === result.rounds.length - 1 && phase === PHASES.END;
   const p1Won = round.winner === p1Id || round.winner === 'player1';
   const p2Won = round.winner === p2Id || round.winner === 'player2';
 

@@ -7,137 +7,328 @@ dotenv.config();
 
 const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/animedraft';
 
-const roles = [
-  { key: 'captain', label: 'Captain', icon: 'crown', description: 'Leads the team' },
-  { key: 'vice_captain', label: 'Vice Captain', icon: 'shield-half', description: 'Second in command' },
-  { key: 'support_1', label: 'Support 1', icon: 'hand-metal', description: 'Primary support' },
-  { key: 'support_2', label: 'Support 2', icon: 'life-buoy', description: 'Secondary support' },
-  { key: 'tank', label: 'Tank', icon: 'shield', description: 'Absorbs damage' },
-  { key: 'healer', label: 'Healer', icon: 'heart', description: 'Restores health' },
-  { key: 'ki_control', label: 'Ki Control', icon: 'zap', description: 'Energy efficiency' },
-  { key: 'speed', label: 'Speed', icon: 'wind', description: 'Combat speed' },
-  { key: 'power_level', label: 'Power Level', icon: 'flame', description: 'Raw power' },
-  { key: 'technique', label: 'Technique', icon: 'crosshair', description: 'Skill accuracy' },
-  { key: 'iq', label: 'IQ', icon: 'brain', description: 'Combat intelligence' },
-  { key: 'energy_manipulation', label: 'Energy Manipulation', icon: 'orbit', description: 'Ki blasts and auras' },
-  { key: 'form', label: 'Form', icon: 'layers', description: 'Transformations' },
-  { key: 'sensei', label: 'Sensei', icon: 'book-open', description: 'Mentorship' },
-  { key: 'martial_arts', label: 'Martial Arts', icon: 'swords', description: 'Hand to hand combat' },
-];
+const generateStats = (name, roleKeys) => {
+  let powerBase = 75 + Math.floor(Math.random() * 10); // 75-85 average
 
-const allRoleKeys = roles.map(r => r.key);
-
-const generateStats = (peaks) => {
+  const godTier = ['MUI', 'Ultra Instinct', 'Ultra Ego', 'Black Frieza', 'Beerus', 'Whis', 'Baryon', 'Six Paths', 'Kaguya', 'True Bankai', 'Yhwach', 'Soul King', 'Gear 5', 'Roger', 'Whitebeard', 'True Form', 'Gojo (Adult)', 'Demon King', 'Yoriichi', 'Prime', 'Apex'];
+  const highTier = ['SSB', 'SSG', 'SSJ4', 'Golden', 'Beast', 'LSSJ', 'KCM', 'Rinnegan', 'Edo', 'Dangai', 'Vasto Lorde', 'Monster', 'Gear 4', 'Yonko', 'Awakened', 'Special Grade', 'Domain', 'Mark', 'Upper Rank', '100%'];
+  
+  if (godTier.some(t => name.includes(t))) powerBase = 97 + Math.floor(Math.random() * 4); // 97-100
+  else if (highTier.some(t => name.includes(t))) powerBase = 90 + Math.floor(Math.random() * 6); // 90-95
+  
   const stats = {};
-  allRoleKeys.forEach(k => {
-    if (peaks[k]) {
-      stats[k] = peaks[k];
-    } else {
-      // Background stats are between 40 and 84
-      stats[k] = Math.floor(Math.random() * 45) + 40; 
-    }
+  roleKeys.forEach(k => {
+    // Add some random variance to each stat based on the character's general power tier
+    let statVal = powerBase + Math.floor(Math.random() * 15 - 7); 
+    stats[k] = Math.max(40, Math.min(100, statVal)); // clamp 40-100
   });
   return stats;
 }
 
-// Note: variantOf is intentionally unused. Forms (like Goku SSJ) and Fusions (Vegito)
-// are treated as fully independent characters to keep the draft pool logic simple.
-const charactersData = [
-  { name: 'Goku', tags: ['Saiyan', 'Z-Fighter'], stats: generateStats({ captain: 95, form: 98, martial_arts: 96 }) },
-  { name: 'Vegeta', tags: ['Saiyan', 'Z-Fighter'], stats: generateStats({ vice_captain: 95, power_level: 96, energy_manipulation: 94 }) },
-  { name: 'Gohan', tags: ['Saiyan', 'Z-Fighter', 'Earthling'], stats: generateStats({ iq: 95, form: 96, power_level: 93 }) },
-  { name: 'Piccolo', tags: ['Namekian', 'Z-Fighter'], stats: generateStats({ sensei: 95, iq: 96, technique: 92 }) },
-  { name: 'Krillin', tags: ['Earthling', 'Z-Fighter'], stats: generateStats({ support_1: 95, support_2: 90, technique: 94 }) },
-  { name: 'Master Roshi', tags: ['Earthling', 'Sensei'], stats: generateStats({ sensei: 99, martial_arts: 98, iq: 90 }) },
-  { name: 'Yamcha', tags: ['Earthling', 'Z-Fighter'], stats: generateStats({ support_2: 95, speed: 84, technique: 80 }) },
-  { name: 'Tien', tags: ['Earthling', 'Z-Fighter'], stats: generateStats({ technique: 96, martial_arts: 92, support_1: 85 }) },
-  { name: 'Trunks', tags: ['Saiyan', 'Earthling', 'Time Traveler'], stats: generateStats({ speed: 90, form: 88, power_level: 88 }) },
-  { name: 'Goten', tags: ['Saiyan', 'Earthling'], stats: generateStats({ support_2: 88, speed: 85, form: 86 }) },
-  { name: 'Frieza', tags: ['Villain', 'Alien'], stats: generateStats({ form: 96, energy_manipulation: 95, captain: 94 }) },
-  { name: 'Cell', tags: ['Villain', 'Android'], stats: generateStats({ technique: 98, form: 94, iq: 95 }) },
-  { name: 'Majin Buu', tags: ['Villain', 'Majin'], stats: generateStats({ tank: 99, healer: 98, power_level: 94 }) },
-  { name: 'Broly', tags: ['Saiyan', 'Villain'], stats: generateStats({ power_level: 99, tank: 98, form: 97 }) },
-  { name: 'Beerus', tags: ['Deity', 'Destroyer'], stats: generateStats({ power_level: 99, energy_manipulation: 99, speed: 96 }) },
-  { name: 'Whis', tags: ['Deity', 'Angel'], stats: generateStats({ sensei: 100, ki_control: 100, speed: 99 }) },
-  { name: 'Android 17', tags: ['Android', 'Z-Fighter'], stats: generateStats({ ki_control: 99, tank: 96, support_1: 94 }) },
-  { name: 'Android 18', tags: ['Android', 'Z-Fighter'], stats: generateStats({ ki_control: 99, vice_captain: 90, speed: 88 }) },
-  { name: 'Jiren', tags: ['Pride Trooper', 'Alien'], stats: generateStats({ power_level: 100, tank: 97, speed: 96 }) },
-  { name: 'Hit', tags: ['Assassin', 'Alien'], stats: generateStats({ technique: 99, speed: 95, martial_arts: 90 }) },
-  { name: 'Raditz', tags: ['Saiyan', 'Villain'], stats: generateStats({ martial_arts: 88, power_level: 85, speed: 85 }) },
-  { name: 'Nappa', tags: ['Saiyan', 'Villain'], stats: generateStats({ tank: 90, power_level: 88, martial_arts: 85 }) },
-  { name: 'Bardock', tags: ['Saiyan'], stats: generateStats({ captain: 92, martial_arts: 90, form: 88 }) },
-  { name: 'Vegito', tags: ['Saiyan', 'Fusion'], stats: generateStats({ power_level: 100, martial_arts: 99, form: 99 }) },
-  { name: 'Gogeta', tags: ['Saiyan', 'Fusion'], stats: generateStats({ speed: 100, technique: 99, form: 99 }) },
-  { name: 'Gotenks', tags: ['Saiyan', 'Fusion', 'Earthling'], stats: generateStats({ form: 95, energy_manipulation: 94, speed: 92 }) },
-  { name: 'Cabba', tags: ['Saiyan'], stats: generateStats({ martial_arts: 88, speed: 88, form: 86 }) },
-  { name: 'Caulifla', tags: ['Saiyan'], stats: generateStats({ form: 92, martial_arts: 90, power_level: 89 }) },
-  { name: 'Kale', tags: ['Saiyan'], stats: generateStats({ power_level: 94, tank: 92, form: 93 }) },
-  { name: 'Kefla', tags: ['Saiyan', 'Fusion'], stats: generateStats({ power_level: 97, speed: 95, form: 96 }) },
-  { name: 'Toppo', tags: ['Pride Trooper', 'Deity'], stats: generateStats({ vice_captain: 94, tank: 95, energy_manipulation: 93 }) },
-  { name: 'Dyspo', tags: ['Pride Trooper'], stats: generateStats({ speed: 99, martial_arts: 88, technique: 85 }) },
-  { name: 'Zamasu', tags: ['Deity', 'Villain'], stats: generateStats({ healer: 98, ki_control: 95, iq: 92 }) },
-  { name: 'Goku Black', tags: ['Villain', 'Deity'], stats: generateStats({ power_level: 95, form: 96, martial_arts: 95 }) },
-  { name: 'Frost', tags: ['Alien', 'Villain'], stats: generateStats({ technique: 90, speed: 88, iq: 88 }) },
-  { name: 'Champa', tags: ['Deity', 'Destroyer'], stats: generateStats({ power_level: 98, energy_manipulation: 98, tank: 92 }) },
-  { name: 'Vados', tags: ['Deity', 'Angel'], stats: generateStats({ sensei: 99, ki_control: 99, speed: 98 }) },
-  { name: 'Dende', tags: ['Namekian', 'Deity'], stats: generateStats({ healer: 99, support_1: 95, iq: 90 }) },
-  { name: 'Kami', tags: ['Namekian', 'Deity'], stats: generateStats({ sensei: 92, support_2: 90, iq: 92 }) },
-  { name: 'Mr. Popo', tags: ['Deity', 'Sensei'], stats: generateStats({ sensei: 94, martial_arts: 90, ki_control: 92 }) },
-  { name: 'Yajirobe', tags: ['Earthling'], stats: generateStats({ support_2: 85, tank: 80, speed: 70 }) },
-  { name: 'Korin', tags: ['Deity', 'Sensei'], stats: generateStats({ sensei: 95, support_1: 92, iq: 94 }) },
-  { name: 'King Kai', tags: ['Deity', 'Sensei'], stats: generateStats({ sensei: 97, iq: 96, support_1: 90 }) },
-  { name: 'Supreme Kai', tags: ['Deity'], stats: generateStats({ support_1: 92, iq: 90, ki_control: 90 }) },
-  { name: 'Kibito', tags: ['Deity'], stats: generateStats({ healer: 92, support_2: 88, ki_control: 85 }) },
-  { name: 'Uub', tags: ['Earthling'], stats: generateStats({ power_level: 92, martial_arts: 90, potential: 95 }) },
-  { name: 'Buuhan', tags: ['Villain', 'Majin'], stats: generateStats({ power_level: 97, iq: 95, technique: 96 }) },
-  { name: 'Buutenks', tags: ['Villain', 'Majin'], stats: generateStats({ speed: 96, technique: 95, form: 94 }) },
-  { name: 'Janemba', tags: ['Villain', 'Demon'], stats: generateStats({ technique: 97, speed: 95, energy_manipulation: 94 }) },
-  { name: 'Cooler', tags: ['Villain', 'Alien'], stats: generateStats({ form: 94, power_level: 92, martial_arts: 90 }) },
-  { name: 'Turles', tags: ['Saiyan', 'Villain'], stats: generateStats({ form: 88, power_level: 86, martial_arts: 85 }) },
-  { name: 'Lord Slug', tags: ['Namekian', 'Villain'], stats: generateStats({ form: 88, tank: 88, power_level: 85 }) },
-  { name: 'Bojack', tags: ['Villain', 'Alien'], stats: generateStats({ power_level: 90, martial_arts: 88, tank: 88 }) },
-  { name: 'Android 16', tags: ['Android'], stats: generateStats({ tank: 95, power_level: 90, ki_control: 95 }) },
-  { name: 'Android 19', tags: ['Android', 'Villain'], stats: generateStats({ energy_manipulation: 92, tank: 85, ki_control: 90 }) }
+const versesData = [
+  {
+    slug: 'dbz',
+    name: 'Dragon Ball',
+    isOfficial: true,
+    roles: [
+      { key: 'captain', label: 'Captain', icon: 'crown', description: 'Leads the team' },
+      { key: 'vice_captain', label: 'Vice Captain', icon: 'shield-half', description: 'Second in command' },
+      { key: 'support', label: 'Support', icon: 'hand-metal', description: 'Ally support' },
+      { key: 'tank', label: 'Tank', icon: 'shield', description: 'Absorbs damage' },
+      { key: 'healer', label: 'Healer', icon: 'heart', description: 'Restores health' },
+      { key: 'ki_control', label: 'Ki Control', icon: 'zap', description: 'Energy efficiency' },
+      { key: 'speed', label: 'Speed', icon: 'wind', description: 'Combat speed' },
+      { key: 'power_level', label: 'Power Level', icon: 'flame', description: 'Raw power' },
+      { key: 'technique', label: 'Technique', icon: 'crosshair', description: 'Skill accuracy' },
+      { key: 'iq', label: 'IQ', icon: 'brain', description: 'Combat intelligence' },
+      { key: 'energy_manipulation', label: 'Energy Manipulation', icon: 'orbit', description: 'Ki blasts and auras' },
+      { key: 'form', label: 'Form', icon: 'layers', description: 'Transformations' },
+      { key: 'martial_arts', label: 'Martial Arts', icon: 'swords', description: 'Hand to hand combat' },
+    ],
+    charNames: [
+      'Goku (Base)', 'Goku (Kaioken)', 'Goku (Super Saiyan)', 'Goku (SSJ2)', 'Goku (SSJ3)', 'Goku (SSG)', 'Goku (SSB)', 'Goku (UI Omen)', 'Goku (MUI)',
+      'Vegeta (Base)', 'Vegeta (Super Saiyan)', 'Vegeta (Super Vegeta)', 'Majin Vegeta', 'Vegeta (SSJ2)', 'Vegeta (SSB)', 'Vegeta (SSBE)', 'Vegeta (Ultra Ego)',
+      'Gohan (Kid)', 'Gohan (SSJ)', 'Gohan (SSJ2 Youth)', 'Gohan (Adult Base)', 'Gohan (Ultimate)', 'Gohan (Beast)',
+      'Piccolo (Base)', 'Piccolo (Fused with Kami)', 'Piccolo (Orange)',
+      'Frieza (1st Form)', 'Frieza (2nd Form)', 'Frieza (3rd Form)', 'Frieza (Final Form)', 'Frieza (100% Full Power)', 'Golden Frieza', 'Black Frieza',
+      'Cell (Imperfect)', 'Cell (Semi-Perfect)', 'Cell (Perfect)', 'Cell (Super Perfect)',
+      'Majin Buu (Fat)', 'Evil Buu', 'Super Buu', 'Buutenks', 'Buuhan', 'Kid Buu',
+      'Broly (Z Base)', 'Broly (Z SSJ)', 'Broly (Z LSSJ)', 'Broly (Super Base)', 'Broly (Super Ikari)', 'Broly (Super SSJ)', 'Broly (Super Full Power SSJ)',
+      'Trunks (Kid)', 'Trunks (Future Base)', 'Trunks (Future SSJ)', 'Super Trunks', 'Trunks (SSJ Rage)',
+      'Goten (Base)', 'Goten (SSJ)',
+      'Gotenks (Base)', 'Gotenks (SSJ)', 'Gotenks (SSJ3)',
+      'Vegito (Base)', 'Vegito (Super Vegito)', 'Vegito (SSB)',
+      'Gogeta (Base)', 'Gogeta (Super Gogeta)', 'Gogeta (SSJ4)', 'Gogeta (SSB)',
+      'Krillin', 'Tien', 'Yamcha', 'Master Roshi (Base)', 'Master Roshi (Max Power)', 'Yajirobe', 'Chiaotzu',
+      'Android 17 (Z)', 'Android 17 (Super)', 'Android 18', 'Android 16', 'Android 19', 'Dr. Gero',
+      'Beerus', 'Whis', 'Champa', 'Vados',
+      'Jiren', 'Jiren (Full Power)', 'Toppo (Base)', 'Toppo (God of Destruction)', 'Dyspo',
+      'Hit', 'Cabba (Base)', 'Cabba (SSJ)', 'Caulifla (Base)', 'Caulifla (SSJ2)', 'Kale (Base)', 'Kale (Berserk)', 'Kefla (Base)', 'Kefla (SSJ2)',
+      'Zamasu', 'Goku Black (Base)', 'Goku Black (Super Saiyan Rose)', 'Merged Zamasu', 'Merged Zamasu (Corrupted)',
+      'Raditz', 'Nappa', 'Bardock (Base)', 'Bardock (SSJ)',
+      'Cooler (Base)', 'Cooler (Final Form)', 'Metal Cooler', 'Janemba (Fat)', 'Super Janemba', 'Bojack', 'Turles'
+    ]
+  },
+  {
+    slug: 'naruto',
+    name: 'Naruto',
+    isOfficial: true,
+    roles: [
+      { key: 'hokage', label: 'Kage', icon: 'crown', description: 'Village Leader' },
+      { key: 'ninjutsu', label: 'Ninjutsu', icon: 'flame', description: 'Ninja arts' },
+      { key: 'taijutsu', label: 'Taijutsu', icon: 'swords', description: 'Hand-to-hand' },
+      { key: 'genjutsu', label: 'Genjutsu', icon: 'eye', description: 'Illusions' },
+      { key: 'chakra', label: 'Chakra', icon: 'droplet', description: 'Chakra reserves' },
+      { key: 'speed', label: 'Speed', icon: 'wind', description: 'Movement speed' },
+      { key: 'intelligence', label: 'Intelligence', icon: 'brain', description: 'Battle IQ' },
+      { key: 'healing', label: 'Medical Ninjutsu', icon: 'heart', description: 'Healing arts' },
+      { key: 'summoning', label: 'Summoning', icon: 'paw-print', description: 'Summoning beasts' },
+      { key: 'sensory', label: 'Sensory', icon: 'wifi', description: 'Sensing chakra' },
+      { key: 'kekkai_genkai', label: 'Kekkai Genkai', icon: 'layers', description: 'Bloodline limit' },
+      { key: 'stamina', label: 'Stamina', icon: 'battery-charging', description: 'Endurance' },
+    ],
+    charNames: [
+      'Naruto (Kid Base)', 'Naruto (Kid 1-Tail)', 'Naruto (Shippuden Base)', 'Naruto (Sage Mode)', 'Naruto (KCM 1)', 'Naruto (KCM 2)', 'Naruto (Six Paths Sage Mode)', 'Naruto (Hokage)', 'Naruto (Baryon Mode)',
+      'Sasuke (Kid Base)', 'Sasuke (Curse Mark 1)', 'Sasuke (Curse Mark 2)', 'Sasuke (Hebi)', 'Sasuke (Taka/MS)', 'Sasuke (EMS)', 'Sasuke (Rinnegan)', 'Sasuke (Adult)',
+      'Sakura (Kid)', 'Sakura (Shippuden)', 'Sakura (War Arc Byakugou)',
+      'Kakashi (Base)', 'Kakashi (Sharingan)', 'Kakashi (War Arc)', 'Kakashi (DMS)', 'Kakashi (Hokage)',
+      'Shikamaru (Kid)', 'Shikamaru (Shippuden)', 'Shikamaru (Adult)',
+      'Ino', 'Choji (Base)', 'Choji (Butterfly Mode)', 'Hinata (Base)', 'Hinata (War Arc)',
+      'Kiba', 'Shino', 'Neji (Kid)', 'Neji (Shippuden)', 'Rock Lee (Base)', 'Rock Lee (5th Gate)', 'Rock Lee (6th Gate)', 'Tenten',
+      'Gaara (Kid)', 'Gaara (Shukaku)', 'Gaara (Kazekage Base)', 'Gaara (War Arc)', 'Kankuro', 'Temari',
+      'Jiraiya (Base)', 'Jiraiya (Sage Mode)', 'Tsunade (Base)', 'Tsunade (100 Healings)', 'Orochimaru (Base)', 'Orochimaru (Hydra)',
+      'Minato (Base)', 'Minato (Edo KCM)', 'Hashirama (Base)', 'Hashirama (Sage Mode)', 'Tobirama', 'Hiruzen (Old)', 'Hiruzen (Prime)',
+      'Madara (Base)', 'Madara (Edo Tensei)', 'Madara (Alive Rinnegan)', 'Madara (Ten Tails Jinchuriki)',
+      'Obito (Kid)', 'Obito (Masked/Yellow Mask)', 'Obito (Tobi)', 'Obito (War Arc/White Mask)', 'Obito (Ten Tails Jinchuriki)',
+      'Pain (Deva Path)', 'Nagato (Edo Tensei)', 'Konan',
+      'Itachi (Base)', 'Itachi (Edo Tensei)', 'Kisame (Base)', 'Kisame (Fused)', 'Deidara', 'Sasori', 'Hidan', 'Kakuzu', 'Zetsu',
+      'Kabuto (Base)', 'Kabuto (Snake Sage)',
+      'Killer Bee (Base)', 'Killer Bee (Eight Tails)', 'A (4th Raikage)', 'Mei (Mizukage)', 'Onoki (Tsuchikage)', 'Mu', 'Gengetsu', 'Third Raikage',
+      'Kaguya Otsutsuki', 'Momoshiki (Base)', 'Momoshiki (Fused)', 'Kinshiki', 'Toneri', 'Isshiki'
+    ]
+  },
+  {
+    slug: 'bleach',
+    name: 'Bleach',
+    isOfficial: true,
+    roles: [
+      { key: 'captain', label: 'Captain', icon: 'crown', description: 'Gotei 13 Captain' },
+      { key: 'reiatsu', label: 'Reiatsu', icon: 'flame', description: 'Spiritual pressure' },
+      { key: 'zanjutsu', label: 'Zanjutsu', icon: 'swords', description: 'Swordsmanship' },
+      { key: 'kido', label: 'Kido', icon: 'zap', description: 'Demon magic' },
+      { key: 'speed', label: 'Speed', icon: 'wind', description: 'Movement speed' },
+      { key: 'intelligence', label: 'Intelligence', icon: 'brain', description: 'Battle IQ' },
+      { key: 'healing', label: 'Kaido', icon: 'heart', description: 'Healing arts' },
+      { key: 'stamina', label: 'Stamina', icon: 'battery-charging', description: 'Endurance' },
+      { key: 'bankai', label: 'Bankai', icon: 'layers', description: 'Final release' },
+      { key: 'hakuda', label: 'Hakuda', icon: 'hand-metal', description: 'Hand-to-hand' },
+      { key: 'durability', label: 'Durability', icon: 'shield', description: 'Toughness' },
+    ],
+    charNames: [
+      'Ichigo (Substitute)', 'Ichigo (Shikai)', 'Ichigo (Bankai)', 'Ichigo (Hollow Mask)', 'Ichigo (Vasto Lorde)', 'Ichigo (Fullbring)', 'Ichigo (Dangai/Mugetsu)', 'Ichigo (True Shikai)', 'Ichigo (True Bankai)', 'Ichigo (Horn of Salvation)',
+      'Rukia (Base)', 'Rukia (Shikai)', 'Rukia (Bankai)',
+      'Renji (Base)', 'Renji (Shikai)', 'Renji (Bankai)', 'Renji (True Bankai)',
+      'Uryu (Base)', 'Uryu (Letzt Stil)', 'Uryu (TYBW Vollstandig)',
+      'Chad (Right Arm)', 'Chad (Left Arm)', 'Orihime (Base)', 'Orihime (TYBW)',
+      'Byakuya (Base)', 'Byakuya (Shikai)', 'Byakuya (Bankai)', 'Byakuya (TYBW Bankai)',
+      'Kenpachi (Base)', 'Kenpachi (Eyepatch Removed)', 'Kenpachi (Shikai)', 'Kenpachi (Bankai)',
+      'Toshiro (Base)', 'Toshiro (Bankai)', 'Toshiro (Adult Bankai)',
+      'Shunsui (Base)', 'Shunsui (Shikai)', 'Shunsui (Bankai)',
+      'Ukitake (Base)', 'Ukitake (Shikai)',
+      'Yamamoto (Base)', 'Yamamoto (Shikai)', 'Yamamoto (Bankai)',
+      'Unohana (Base)', 'Unohana (Bankai)',
+      'Mayuri (Base)', 'Mayuri (Bankai)', 'Mayuri (Modified Bankai)',
+      'Komamura (Base)', 'Komamura (Bankai)', 'Komamura (Human Form)',
+      'Soi Fon (Base)', 'Soi Fon (Shunko)', 'Soi Fon (Bankai)',
+      'Shinji (Base)', 'Shinji (Hollow Mask)', 'Shinji (Bankai)',
+      'Kisuke (Base)', 'Kisuke (Shikai)', 'Kisuke (Bankai)',
+      'Yoruichi (Base)', 'Yoruichi (Shunko)', 'Yoruichi (Thunder Cat)',
+      'Isshin (Base)', 'Isshin (Shikai)',
+      'Aizen (Base Captain)', 'Aizen (Chrysalis)', 'Aizen (Monster)', 'Aizen (TYBW Muken)',
+      'Ulquiorra (Base)', 'Ulquiorra (Resurreccion)', 'Ulquiorra (Segunda Etapa)',
+      'Grimmjow (Base)', 'Grimmjow (Resurreccion)',
+      'Starrk (Base)', 'Starrk (Resurreccion)',
+      'Halibel (Base)', 'Halibel (Resurreccion)',
+      'Nnoitra (Base)', 'Nnoitra (Resurreccion)',
+      'Yhwach (Base)', 'Yhwach (The Almighty)', 'Yhwach (Soul King Absorbed)',
+      'Haschwalth', 'Askin', 'Bazz-B', 'Lille Barro (Base)', 'Lille Barro (Vollstandig)', 'Gerard Valkyrie', 'Pernida', 'Gremmy'
+    ]
+  },
+  {
+    slug: 'one-piece',
+    name: 'One Piece',
+    isOfficial: true,
+    roles: [
+      { key: 'captain', label: 'Captain', icon: 'crown', description: 'Crew Leader' },
+      { key: 'conquerors_haki', label: 'Conquerors', icon: 'zap', description: 'King\'s Haki' },
+      { key: 'armament_haki', label: 'Armament', icon: 'shield', description: 'Armor Haki' },
+      { key: 'observation_haki', label: 'Observation', icon: 'eye', description: 'Sensing Haki' },
+      { key: 'devil_fruit', label: 'Devil Fruit', icon: 'star', description: 'Fruit mastery' },
+      { key: 'speed', label: 'Speed', icon: 'wind', description: 'Movement speed' },
+      { key: 'strength', label: 'Strength', icon: 'anchor', description: 'Physical power' },
+      { key: 'durability', label: 'Durability', icon: 'battery-charging', description: 'Toughness' },
+      { key: 'intelligence', label: 'Intelligence', icon: 'brain', description: 'Battle IQ' },
+      { key: 'swordsmanship', label: 'Swordsmanship', icon: 'swords', description: 'Sword skill' },
+    ],
+    charNames: [
+      'Luffy (Base)', 'Luffy (Gear 2)', 'Luffy (Gear 3)', 'Luffy (Gear 4 Bounceman)', 'Luffy (Gear 4 Snakeman)', 'Luffy (Gear 5)',
+      'Zoro (Base)', 'Zoro (Asura)', 'Zoro (King of Hell)',
+      'Sanji (Base)', 'Sanji (Diable Jambe)', 'Sanji (Ifrit Jambe)',
+      'Nami (Base)', 'Nami (Zeus)', 'Usopp', 'Chopper (Brain Point)', 'Chopper (Monster Point)',
+      'Robin (Base)', 'Robin (Demonio Fleur)', 'Franky (Base)', 'Franky (General)', 'Brook', 'Jinbe',
+      'Shanks', 'Buggy', 'Mihawk', 'Crocodile', 'Doflamingo (Base)', 'Doflamingo (Awakened)',
+      'Moria', 'Kuma', 'Boa Hancock', 'Trafalgar Law (Base)', 'Trafalgar Law (Awakened)',
+      'Eustass Kid (Base)', 'Eustass Kid (Awakened)', 'Bege', 'Apoo', 'Hawkins', 'X Drake', 'Urouge', 'Jewelry Bonney',
+      'Blackbeard (Yami Yami)', 'Blackbeard (Dual Fruit)',
+      'Kaido (Base)', 'Kaido (Dragon)', 'Kaido (Hybrid)', 'Kaido (Flaming Drum Dragon)',
+      'Big Mom (Base)', 'Big Mom (Zeus/Prometheus)', 'Big Mom (Bigger Mom)',
+      'Whitebeard (Old)', 'Whitebeard (Prime)', 'Marco', 'Portgas D. Ace', 'Sabo (Base)', 'Sabo (Flame Fruit)',
+      'Monkey D. Dragon', 'Garp (Old)', 'Garp (Prime)', 'Sengoku (Old)', 'Sengoku (Buddha)',
+      'Akainu', 'Aokiji', 'Kizaru', 'Fujitora', 'Ryokugyu', 'Smoker', 'Tashigi',
+      'Rob Lucci (Base)', 'Rob Lucci (Leopard)', 'Rob Lucci (Awakened)', 'Kaku', 'Enel', 'Katakuri', 'King', 'Queen', 'Jack'
+    ]
+  },
+  {
+    slug: 'jjk',
+    name: 'Jujutsu Kaisen',
+    isOfficial: true,
+    roles: [
+      { key: 'cursed_energy', label: 'Cursed Energy', icon: 'flame', description: 'Energy reserves' },
+      { key: 'domain_expansion', label: 'Domain Expansion', icon: 'layers', description: 'Pinnacle of sorcery' },
+      { key: 'cursed_technique', label: 'Cursed Technique', icon: 'zap', description: 'Innate technique' },
+      { key: 'reverse_cursed', label: 'Reverse Cursed', icon: 'heart', description: 'Healing' },
+      { key: 'speed', label: 'Speed', icon: 'wind', description: 'Movement speed' },
+      { key: 'strength', label: 'Strength', icon: 'anchor', description: 'Physical power' },
+      { key: 'durability', label: 'Durability', icon: 'shield', description: 'Toughness' },
+      { key: 'intelligence', label: 'Intelligence', icon: 'brain', description: 'Battle IQ' },
+      { key: 'hand_to_hand', label: 'Hand-to-Hand', icon: 'hand-metal', description: 'Martial arts' },
+      { key: 'black_flash', label: 'Black Flash', icon: 'star', description: 'Critical hit' },
+      { key: 'barrier', label: 'Barrier', icon: 'box', description: 'Barrier techniques' },
+    ],
+    charNames: [
+      'Yuji (Goodwill)', 'Yuji (Shibuya)', 'Yuji (Shinjuku Awakened)',
+      'Megumi (Base)', 'Megumi (Domain Expansion)',
+      'Nobara', 'Gojo (Hidden Inventory)', 'Gojo (Adult)',
+      'Geto (Hidden Inventory)', 'Geto (Adult)', 'Kenjaku',
+      'Yuta (JJK 0)', 'Yuta (Culling Games)', 'Yuta (Domain Expansion)',
+      'Maki (Student)', 'Maki (Awakened)', 'Maki (Fully Realized)',
+      'Inumaki', 'Panda (Base)', 'Panda (Gorilla Mode)', 'Panda (Sister Core)',
+      'Hakari (Base)', 'Hakari (Jackpot)', 'Kirara',
+      'Todo (Base)', 'Todo (Vibraslap)', 'Kamo', 'Mechamaru (Base)', 'Mechamaru (Ultimate)', 'Miwa', 'Mai',
+      'Nanami', 'Mei Mei', 'Naobito', 'Naoya (Human)', 'Naoya (Cursed Spirit)',
+      'Choso', 'Eso', 'Kechizu',
+      'Mahito (Base)', 'Mahito (Instant Spirit of Distorted Killing)',
+      'Jogo', 'Hanami', 'Dagon',
+      'Sukuna (Yuji Vessel)', 'Sukuna (Megumi Vessel)', 'Sukuna (True Form/Heian Era)',
+      'Uraume', 'Kashimo (Base)', 'Kashimo (Mythical Beast Amber)',
+      'Higuruma (Base)', 'Higuruma (Domain Expansion)', 'Takaba', 'Ryu Ishigori', 'Uro', 'Yorozu'
+    ]
+  },
+  {
+    slug: 'demon-slayer',
+    name: 'Demon Slayer',
+    isOfficial: true,
+    roles: [
+      { key: 'breathing', label: 'Breathing Style', icon: 'wind', description: 'Sword technique' },
+      { key: 'speed', label: 'Speed', icon: 'zap', description: 'Movement speed' },
+      { key: 'strength', label: 'Strength', icon: 'anchor', description: 'Physical power' },
+      { key: 'stamina', label: 'Stamina', icon: 'battery-charging', description: 'Endurance' },
+      { key: 'durability', label: 'Durability', icon: 'shield', description: 'Toughness' },
+      { key: 'regeneration', label: 'Regeneration', icon: 'heart', description: 'Healing (Demons)' },
+      { key: 'blood_demon_art', label: 'Blood Demon Art', icon: 'flame', description: 'Demon magic' },
+      { key: 'mark', label: 'Slayer Mark', icon: 'star', description: 'Power boost' },
+      { key: 'swordsmanship', label: 'Swordsmanship', icon: 'swords', description: 'Blade skill' },
+    ],
+    charNames: [
+      'Tanjiro (Water Breathing)', 'Tanjiro (Hinokami Kagura)', 'Tanjiro (Demon Slayer Mark)', 'Tanjiro (13th Form)', 'Tanjiro (Demon King)',
+      'Nezuko (Base)', 'Nezuko (Awakened Form)', 'Nezuko (Sun Conqueror)',
+      'Zenitsu (Base)', 'Zenitsu (Godspeed)', 'Inosuke (Base)', 'Inosuke (Beast Breathing)',
+      'Giyu (Base)', 'Giyu (Marked)', 'Rengoku (Base)', 'Rengoku (Esoteric Art)',
+      'Tengen (Base)', 'Tengen (Musical Score)', 'Shinobu',
+      'Muichiro (Base)', 'Muichiro (Marked)', 'Mitsuri (Base)', 'Mitsuri (Marked)',
+      'Obanai (Base)', 'Obanai (Marked)', 'Sanemi (Base)', 'Sanemi (Marked)',
+      'Gyomei (Base)', 'Gyomei (Marked)',
+      'Kanao', 'Genya (Base)', 'Genya (Demon Form)',
+      'Muzan (Base)', 'Muzan (Combat Form)', 'Muzan (Baby Form)',
+      'Kokushibo (Base)', 'Kokushibo (Long Sword)', 'Kokushibo (Monstrous Form)',
+      'Doma', 'Akaza (Base)', 'Akaza (Compass Needle)',
+      'Hantengu (Base)', 'Hantengu (Clones)', 'Zohakuten',
+      'Gyokko (Base)', 'Gyokko (True Form)',
+      'Gyutaro', 'Daki', 'Kaigaku', 'Enmu', 'Rui', 'Susamaru', 'Yahaba', 'Yoriichi Tsugikuni'
+    ]
+  },
+  {
+    slug: 'mha',
+    name: 'My Hero Academia',
+    isOfficial: true,
+    roles: [
+      { key: 'quirk_power', label: 'Quirk Power', icon: 'zap', description: 'Raw quirk output' },
+      { key: 'quirk_control', label: 'Quirk Control', icon: 'sliders', description: 'Mastery of quirk' },
+      { key: 'speed', label: 'Speed', icon: 'wind', description: 'Movement speed' },
+      { key: 'strength', label: 'Strength', icon: 'anchor', description: 'Physical power' },
+      { key: 'durability', label: 'Durability', icon: 'shield', description: 'Toughness' },
+      { key: 'intelligence', label: 'Intelligence', icon: 'brain', description: 'Battle IQ' },
+      { key: 'technique', label: 'Technique', icon: 'crosshair', description: 'Combat skill' },
+      { key: 'stamina', label: 'Stamina', icon: 'battery-charging', description: 'Endurance' },
+      { key: 'rescue', label: 'Rescue', icon: 'life-buoy', description: 'Saving civilians' },
+    ],
+    charNames: [
+      'Deku (Base)', 'Deku (Full Cowl 5%)', 'Deku (Full Cowl 20%)', 'Deku (100%)', 'Deku (Blackwhip)', 'Deku (Dark Deku)', 'Deku (Gearshift/Apex)',
+      'Bakugo (Base)', 'Bakugo (Cluster)', 'Bakugo (Strafe Panzer)',
+      'Todoroki (Base)', 'Todoroki (Phosphor)',
+      'Uraraka', 'Iida (Base)', 'Iida (Recipro Burst)', 'Tsuyu',
+      'Kirishima (Base)', 'Kirishima (Unbreakable)', 'Yaoyorozu', 'Jiro', 'Kaminari',
+      'Tokoyami (Base)', 'Tokoyami (Ragnarok)', 'Ashido', 'Mineta', 'Sero', 'Shoji', 'Ojiro', 'Aoyama', 'Shinsou',
+      'Mirio (Base)', 'Mirio (Permeation)', 'Tamaki', 'Nejire',
+      'All Might (Golden Age)', 'All Might (Weakened)', 'All Might (Armored Suit)',
+      'Endeavor', 'Hawks', 'Best Jeanist', 'Edgeshot', 'Mirko',
+      'Eraser Head', 'Present Mic', 'Midnight', 'Mt. Lady', 'Kamui Woods', 'Gran Torino',
+      'Shigaraki (Base)', 'Shigaraki (Awakened)', 'Shigaraki (All For One Possessed)', 'Shigaraki (Apex Body)',
+      'All For One (Base/Masked)', 'All For One (Prime/Rewind)',
+      'Dabi', 'Toga (Base)', 'Toga (Sad Man\'s Parade)', 'Twice', 'Spinner', 'Mr. Compress', 'Kurogiri',
+      'Overhaul (Base)', 'Overhaul (Fused)', 'Re-Destro (Base)', 'Re-Destro (100%)', 'Re-Destro (150%)',
+      'Gentle Criminal', 'Lady Nagant', 'Muscular', 'Stain'
+    ]
+  }
 ];
 
 const seedDB = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log('Connected to MongoDB for seeding...');
+    console.log('Connected to MongoDB for exhaustive seeding...');
 
     await Verse.deleteMany({});
     await Character.deleteMany({});
     console.log('Cleared existing Verses and Characters.');
 
-    const verse = new Verse({
-      slug: 'dbz',
-      name: 'Dragon Ball',
-      isOfficial: true,
-      roles: roles,
-    });
+    for (const verseData of versesData) {
+      const { charNames, ...verseInfo } = verseData;
+      
+      const verse = new Verse(verseInfo);
+      const savedVerse = await verse.save();
 
-    const savedVerse = await verse.save();
-    console.log(`Created Verse: ${savedVerse.name}`);
+      const allRoleKeys = verse.roles.map(r => r.key);
 
-    const charsToInsert = charactersData.map(char => ({
-      ...char,
-      verseId: savedVerse._id
-    }));
+      const charsToInsert = charNames.map(name => ({
+        name: name,
+        tags: [verseInfo.name], // Just a generic tag for now
+        verseId: savedVerse._id,
+        stats: generateStats(name, allRoleKeys)
+      }));
 
-    await Character.insertMany(charsToInsert);
-    console.log(`Inserted ${charsToInsert.length} characters.`);
+      await Character.insertMany(charsToInsert);
+      console.log(`Seeded ${charsToInsert.length} forms/characters for ${savedVerse.name}.`);
 
-    // Update the verse counts
-    await Verse.updateOne(
-      { _id: savedVerse._id },
-      { 
-        characterCount: charsToInsert.length,
-        roleCount: savedVerse.roles.length
-      }
-    );
-    console.log('Updated Verse character and role counts.');
+      await Verse.updateOne(
+        { _id: savedVerse._id },
+        { 
+          characterCount: charsToInsert.length,
+          roleCount: savedVerse.roles.length
+        }
+      );
+    }
 
-    console.log('Seeding completed successfully!');
+    console.log('Exhaustive seeding completed successfully!');
     process.exit(0);
   } catch (err) {
     console.error('Error during seeding:', err);

@@ -30,30 +30,39 @@ router.post('/:draftId/simulate', async (req, res) => {
     const player1 = session.players[0].id;
     const player2 = session.players[1].id;
 
-    // Load full characters for the rosters
+    // Load full characters for the rosters (lean so stats is a plain object)
     const chars = await Character.find({ verseId: verse._id }).lean();
     const charMap = {};
-    chars.forEach(c => charMap[c._id.toString()] = c);
+    chars.forEach(c => { charMap[c._id.toString()] = c; });
 
     const rosterA = {};
     const rosterB = {};
 
-    const p1RosterData = session.rosters.get(player1) || new Map();
-    const p2RosterData = session.rosters.get(player2) || new Map();
+    // session.rosters is a Mongoose Map<playerId, Map<roleKey, charId>>
+    // Use .get() for Mongoose Maps; then iterate entries
+    const p1RosterMap = session.rosters.get(player1);
+    const p2RosterMap = session.rosters.get(player2);
 
-    // Map Mongoose Map to plain object with full character data
-    for (const [roleKey, charId] of p1RosterData.entries()) {
-      rosterA[roleKey] = charMap[charId.toString()];
+    if (p1RosterMap) {
+      for (const [roleKey, charId] of p1RosterMap.entries()) {
+        const char = charMap[charId?.toString()];
+        if (char) rosterA[roleKey] = char;
+      }
     }
-    for (const [roleKey, charId] of p2RosterData.entries()) {
-      rosterB[roleKey] = charMap[charId.toString()];
+    if (p2RosterMap) {
+      for (const [roleKey, charId] of p2RosterMap.entries()) {
+        const char = charMap[charId?.toString()];
+        if (char) rosterB[roleKey] = char;
+      }
     }
+
+    console.log(`[Battle] Roster A: ${Object.keys(rosterA).length} roles, Roster B: ${Object.keys(rosterB).length} roles, Verse roles: ${verse.roles.length}`);
     
-    console.log("Roster A keys:", Object.keys(rosterA).length);
-    console.log("Roster B keys:", Object.keys(rosterB).length);
-    console.log("Verse roles:", verse.roles.length);
-    console.log("Roster A keys present:", Object.keys(rosterA));
-    console.log("Roster A has undefined values:", Object.values(rosterA).includes(undefined));
+    // Warn about any missing slots
+    verse.roles.forEach(role => {
+      if (!rosterA[role.key]) console.warn(`[Battle] P1 missing role: ${role.key}`);
+      if (!rosterB[role.key]) console.warn(`[Battle] P2 missing role: ${role.key}`);
+    });
 
     const result = simulateBattle(rosterA, rosterB, verse.roles, player1, player2);
 

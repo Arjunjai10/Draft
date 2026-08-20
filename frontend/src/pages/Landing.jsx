@@ -7,8 +7,11 @@ import { SettingsModal } from '../components/settings/SettingsModal';
 const verses = [
   { id: 'naruto', name: 'Naruto', emoji: '🍃', color: '#ff6b35', glow: 'rgba(255,107,53,0.4)' },
   { id: 'bleach', name: 'Bleach', emoji: '⚔️', color: '#4f8cff', glow: 'rgba(79,140,255,0.4)' },
-  { id: 'dragon-ball', name: 'Dragon Ball', emoji: '🔮', color: '#fbbf24', glow: 'rgba(251,191,36,0.4)' },
+  { id: 'dbz', name: 'Dragon Ball', emoji: '🔮', color: '#fbbf24', glow: 'rgba(251,191,36,0.4)' },
   { id: 'one-piece', name: 'One Piece', emoji: '🏴‍☠️', color: '#22c55e', glow: 'rgba(34,197,94,0.4)' },
+  { id: 'jjk', name: 'Jujutsu Kaisen', emoji: '🤞', color: '#9333ea', glow: 'rgba(147,51,234,0.4)' },
+  { id: 'demon-slayer', name: 'Demon Slayer', emoji: '🌊', color: '#f43f5e', glow: 'rgba(244,63,94,0.4)' },
+  { id: 'mha', name: 'My Hero Academia', emoji: '💥', color: '#3b82f6', glow: 'rgba(59,130,246,0.4)' },
 ];
 
 const features = [
@@ -20,7 +23,7 @@ const features = [
 
 export const Landing = () => {
   const navigate = useNavigate();
-  const [activeVerse, setActiveVerse] = useState('dragon-ball');
+  const [activeVerse, setActiveVerse] = useState('dbz');
   const [showTutorial, setShowTutorial] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -93,8 +96,8 @@ export const Landing = () => {
               key={v.id}
               onClick={() => setActiveVerse(v.id)}
               style={{
-                padding: '0.5rem 1.2rem',
-                borderRadius: '0.75rem',
+                padding: '0.6rem 1.5rem',
+                borderRadius: '0.85rem',
                 border: active ? `1px solid ${v.color}55` : '1px solid transparent',
                 background: active
                   ? `linear-gradient(135deg, ${v.color}22, ${v.color}11)`
@@ -102,7 +105,7 @@ export const Landing = () => {
                 color: active ? '#fff' : 'rgba(255,255,255,0.4)',
                 fontFamily: 'Outfit, sans-serif',
                 fontWeight: active ? 700 : 500,
-                fontSize: '0.82rem',
+                fontSize: '0.9rem',
                 letterSpacing: '0.04em',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -122,14 +125,14 @@ export const Landing = () => {
       <div
         style={{
           width: '100%',
-          maxWidth: '500px',
+          maxWidth: '600px',
           background: 'rgba(15,15,26,0.82)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           border: `1px solid ${currentVerse?.color}33`,
           borderRadius: '1.5rem',
-          padding: '2rem',
-          boxShadow: `0 0 40px ${currentVerse?.glow?.replace('0.4', '0.12')}, 0 24px 60px rgba(0,0,0,0.5)`,
+          padding: '2.5rem',
+          boxShadow: `0 0 50px ${currentVerse?.glow?.replace('0.4', '0.12')}, 0 24px 80px rgba(0,0,0,0.6)`,
           animation: 'slide-up 0.5s ease forwards',
           transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
           position: 'relative',
@@ -143,14 +146,14 @@ export const Landing = () => {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
-              marginBottom: '0.5rem',
+              marginBottom: '1rem',
             }}
           >
             <h1
               style={{
                 fontFamily: 'Outfit, sans-serif',
                 fontWeight: 900,
-                fontSize: '1.8rem',
+                fontSize: 'clamp(1.8rem, 4vw, 2.4rem)',
                 lineHeight: 1.1,
                 background: `linear-gradient(135deg, #fff 30%, ${currentVerse?.color})`,
                 WebkitBackgroundClip: 'text',
@@ -208,21 +211,21 @@ export const Landing = () => {
               </button>
             </div>
           </div>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', fontFamily: 'Inter, sans-serif' }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.95rem', fontFamily: 'Inter, sans-serif' }}>
             Player 1 vs Player 2 — Local or Online
           </p>
         </div>
 
         {/* Divider */}
-        <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)', marginBottom: '1.5rem' }} />
+        <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', marginBottom: '2rem' }} />
 
         {/* Feature Pills */}
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '0.6rem',
-            marginBottom: '1.5rem',
+            gap: '0.75rem',
+            marginBottom: '2rem',
           }}
         >
           {features.map(f => (
@@ -231,17 +234,19 @@ export const Landing = () => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.6rem',
-                padding: '0.6rem 0.75rem',
-                borderRadius: '0.75rem',
+                gap: '0.875rem',
+                padding: '0.75rem 1rem',
+                borderRadius: '0.875rem',
                 background: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.06)',
               }}
             >
-              <span style={{ color: currentVerse?.color, flexShrink: 0 }}>{f.icon}</span>
+              <span style={{ color: currentVerse?.color, flexShrink: 0 }}>
+                {React.cloneElement(f.icon, { size: 20 })}
+              </span>
               <div>
-                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.78rem', color: '#eeeeff' }}>{f.label}</div>
-                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)' }}>{f.desc}</div>
+                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.85rem', color: '#eeeeff' }}>{f.label}</div>
+                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.15rem' }}>{f.desc}</div>
               </div>
             </div>
           ))}
@@ -249,18 +254,18 @@ export const Landing = () => {
 
         {/* CTA — Start Draft */}
         <button
-          onClick={() => navigate(`/setup/${activeVerse === 'dragon-ball' ? 'dbz' : activeVerse}`)}
+          onClick={() => navigate(`/setup/${activeVerse}`)}
           style={{
             width: '100%',
-            padding: '1rem',
-            borderRadius: '0.875rem',
+            padding: '1.25rem',
+            borderRadius: '1rem',
             border: 'none',
             background: `linear-gradient(135deg, ${currentVerse?.color}, ${currentVerse?.color}cc)`,
             color: '#fff',
             fontFamily: 'Outfit, sans-serif',
             fontWeight: 800,
-            fontSize: '1rem',
-            letterSpacing: '0.08em',
+            fontSize: '1.15rem',
+            letterSpacing: '0.1em',
             textTransform: 'uppercase',
             cursor: 'pointer',
             display: 'flex',

@@ -23,11 +23,11 @@ export const TournamentLanding = () => {
       <div style={{ position: 'absolute', top: '10%', left: '20%', width: '400px', height: '400px', borderRadius: '9999px', background: 'radial-gradient(circle, rgba(79,140,255,0.1) 0%, transparent 70%)', filter: 'blur(70px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '10%', right: '20%', width: '400px', height: '400px', borderRadius: '9999px', background: 'radial-gradient(circle, rgba(192,132,252,0.1) 0%, transparent 70%)', filter: 'blur(70px)', pointerEvents: 'none' }} />
 
-      <div style={{ width: '100%', maxWidth: '600px', textAlign: 'center', position: 'relative', zIndex: 10 }}>
+      <div style={{ width: '100%', maxWidth: '700px', textAlign: 'center', position: 'relative', zIndex: 10 }}>
         {/* Icon */}
         <div
           style={{
-            width: '72px', height: '72px', borderRadius: '1.25rem',
+            width: '88px', height: '88px', borderRadius: '1.25rem',
             background: 'linear-gradient(135deg, rgba(79,140,255,0.2), rgba(192,132,252,0.2))',
             border: '1px solid rgba(108,99,255,0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -36,7 +36,7 @@ export const TournamentLanding = () => {
             animation: 'float 4s ease-in-out infinite',
           }}
         >
-          <Trophy size={36} style={{ color: '#fbbf24' }} />
+          <Trophy size={44} style={{ color: '#fbbf24' }} />
         </div>
 
         <h1
@@ -54,20 +54,20 @@ export const TournamentLanding = () => {
         <p
           style={{
             color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif',
-            fontSize: '0.95rem', lineHeight: 1.6, maxWidth: '400px', margin: '0 auto 3rem',
+            fontSize: '1.1rem', lineHeight: 1.6, maxWidth: '500px', margin: '0 auto 3rem',
             animation: 'slide-up 0.5s ease forwards',
           }}
         >
           Host or join a multi-player bracket. Settle debates and prove your drafting strategy against the world.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', animation: 'slide-up 0.6s ease forwards' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', animation: 'slide-up 0.6s ease forwards' }}>
           {/* Host Card */}
           <button
             onClick={() => navigate('/tournament/host')}
             style={{
-              padding: '2rem 1.5rem',
-              borderRadius: '1.25rem',
+              padding: '2.5rem 2rem',
+              borderRadius: '1.5rem',
               background: 'rgba(15,15,26,0.85)',
               border: '1px solid rgba(79,140,255,0.2)',
               cursor: 'pointer',
@@ -78,7 +78,7 @@ export const TournamentLanding = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '0.75rem',
+              gap: '1rem',
             }}
             onMouseEnter={e => {
               e.currentTarget.style.transform = 'translateY(-4px)';
@@ -91,15 +91,15 @@ export const TournamentLanding = () => {
               e.currentTarget.style.boxShadow = '0 0 20px rgba(79,140,255,0.06)';
             }}
           >
-            <div style={{ width: '56px', height: '56px', borderRadius: '1rem', background: 'rgba(79,140,255,0.15)', border: '1px solid rgba(79,140,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(79,140,255,0.2)' }}>
-              <Globe size={28} style={{ color: '#60a5fa' }} />
+            <div style={{ width: '64px', height: '64px', borderRadius: '1.25rem', background: 'rgba(79,140,255,0.15)', border: '1px solid rgba(79,140,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(79,140,255,0.2)' }}>
+              <Globe size={32} style={{ color: '#60a5fa' }} />
             </div>
-            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.15rem', color: '#fff', letterSpacing: '0.02em' }}>Host Tournament</h2>
-            <p style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', lineHeight: 1.5 }}>
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.4rem', color: '#fff', letterSpacing: '0.02em' }}>Host Tournament</h2>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', lineHeight: 1.5 }}>
               Create a new bracket and invite friends to compete
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#60a5fa', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: '0.25rem' }}>
-              Get Started <ChevronRight size={14} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#60a5fa', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: '0.5rem' }}>
+              Get Started <ChevronRight size={16} />
             </div>
           </button>
 
@@ -107,8 +107,8 @@ export const TournamentLanding = () => {
           <button
             onClick={() => navigate('/tournament/join')}
             style={{
-              padding: '2rem 1.5rem',
-              borderRadius: '1.25rem',
+              padding: '2.5rem 2rem',
+              borderRadius: '1.5rem',
               background: 'rgba(15,15,26,0.85)',
               border: '1px solid rgba(192,132,252,0.2)',
               cursor: 'pointer',
@@ -119,7 +119,7 @@ export const TournamentLanding = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '0.75rem',
+              gap: '1rem',
             }}
             onMouseEnter={e => {
               e.currentTarget.style.transform = 'translateY(-4px)';
@@ -132,15 +132,15 @@ export const TournamentLanding = () => {
               e.currentTarget.style.boxShadow = '0 0 20px rgba(192,132,252,0.06)';
             }}
           >
-            <div style={{ width: '56px', height: '56px', borderRadius: '1rem', background: 'rgba(192,132,252,0.15)', border: '1px solid rgba(192,132,252,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(192,132,252,0.2)' }}>
-              <Users size={28} style={{ color: '#d8b4fe' }} />
+            <div style={{ width: '64px', height: '64px', borderRadius: '1.25rem', background: 'rgba(192,132,252,0.15)', border: '1px solid rgba(192,132,252,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(192,132,252,0.2)' }}>
+              <Users size={32} style={{ color: '#d8b4fe' }} />
             </div>
-            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.15rem', color: '#fff', letterSpacing: '0.02em' }}>Join Tournament</h2>
-            <p style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', lineHeight: 1.5 }}>
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.4rem', color: '#fff', letterSpacing: '0.02em' }}>Join Tournament</h2>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', lineHeight: 1.5 }}>
               Enter a 6-character code to join an existing lobby
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#d8b4fe', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: '0.25rem' }}>
-              Enter Code <ChevronRight size={14} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#d8b4fe', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: '0.5rem' }}>
+              Enter Code <ChevronRight size={16} />
             </div>
           </button>
         </div>
@@ -161,15 +161,15 @@ export const TournamentLanding = () => {
           }}
         >
           {[
-            { icon: <Trophy size={14} />, label: 'Bracket Sizes', val: '3, 4 or 8 players' },
-            { icon: <Zap size={14} />, label: 'Live Updates', val: 'Real-time socket' },
-            { icon: <Users size={14} />, label: 'Play or Spectate', val: 'Your choice' },
+            { icon: <Trophy size={16} />, label: 'Bracket Sizes', val: '3, 4 or 8 players' },
+            { icon: <Zap size={16} />, label: 'Live Updates', val: 'Real-time socket' },
+            { icon: <Users size={16} />, label: 'Play or Spectate', val: 'Your choice' },
           ].map(s => (
             <div key={s.label} style={{ textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', color: 'rgba(255,255,255,0.3)', fontSize: '0.65rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
                 {s.icon} {s.label}
               </div>
-              <div style={{ color: '#c084fc', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', fontWeight: 600 }}>{s.val}</div>
+              <div style={{ color: '#c084fc', fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600 }}>{s.val}</div>
             </div>
           ))}
         </div>

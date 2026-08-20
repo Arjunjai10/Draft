@@ -99,43 +99,43 @@ export const DraftSetup = () => {
 
       <div
         style={{
-          width: '100%', maxWidth: '520px',
+          width: '100%', maxWidth: '600px',
           background: 'rgba(15,15,26,0.9)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(108,99,255,0.2)',
-          borderRadius: '1.5rem',
+          borderRadius: '1.75rem',
           padding: '2.5rem',
-          boxShadow: '0 0 40px rgba(108,99,255,0.1), 0 24px 60px rgba(0,0,0,0.5)',
+          boxShadow: '0 0 50px rgba(108,99,255,0.1), 0 24px 80px rgba(0,0,0,0.6)',
           animation: 'slide-up 0.4s ease forwards',
           position: 'relative',
           zIndex: 10,
         }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.625rem', padding: '0.5rem', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', transition: 'all 0.2s' }}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.75rem', padding: '0.6rem', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', transition: 'all 0.2s' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
             onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={20} />
           </button>
           <div style={{ textAlign: 'center' }}>
-            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.5rem', background: 'linear-gradient(135deg, #fde68a, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.04em' }}>
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.8rem', background: 'linear-gradient(135deg, #fde68a, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.04em' }}>
               Draft Setup
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', marginTop: '0.2rem' }}>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', marginTop: '0.25rem' }}>
               {verse.name}
             </p>
           </div>
-          <div style={{ width: '34px' }} />
+          <div style={{ width: '40px' }} />
         </div>
 
         {/* Mode Selector */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: '0.75rem' }}>
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: '0.85rem' }}>
             Opponent
           </label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
             {MODE_OPTIONS.map(opt => {
               const active = mode === opt.val;
               return (
@@ -143,19 +143,19 @@ export const DraftSetup = () => {
                   key={opt.val}
                   onClick={() => setMode(opt.val)}
                   style={{
-                    padding: '0.875rem 0.5rem', borderRadius: '0.875rem',
+                    padding: '1rem 0.5rem', borderRadius: '1rem',
                     border: active ? '1px solid rgba(108,99,255,0.5)' : '1px solid rgba(255,255,255,0.08)',
                     background: active ? 'rgba(108,99,255,0.15)' : 'rgba(255,255,255,0.03)',
                     color: active ? '#c4b5fd' : 'rgba(255,255,255,0.35)',
                     cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
                     transition: 'all 0.2s ease',
-                    boxShadow: active ? '0 0 14px rgba(108,99,255,0.2)' : 'none',
+                    boxShadow: active ? '0 0 16px rgba(108,99,255,0.2)' : 'none',
                     textAlign: 'center',
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.35rem' }}>{opt.icon}</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.78rem' }}>{opt.label}</div>
-                  <div style={{ fontSize: '0.6rem', opacity: 0.6, marginTop: '0.15rem' }}>{opt.sub}</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.4rem' }}>{React.cloneElement(opt.icon, { size: 22 })}</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{opt.label}</div>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.6, marginTop: '0.2rem' }}>{opt.sub}</div>
                 </button>
               );
             })}

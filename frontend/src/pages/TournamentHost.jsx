@@ -84,35 +84,35 @@ export const TournamentHost = () => {
 
       <div
         style={{
-          width: '100%', maxWidth: '460px',
+          width: '100%', maxWidth: '520px',
           background: 'rgba(15,15,26,0.9)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(79,140,255,0.2)',
-          borderRadius: '1.5rem',
+          borderRadius: '1.75rem',
           padding: '2.5rem',
-          boxShadow: '0 0 40px rgba(79,140,255,0.08), 0 24px 60px rgba(0,0,0,0.5)',
+          boxShadow: '0 0 50px rgba(79,140,255,0.08), 0 24px 80px rgba(0,0,0,0.6)',
           animation: 'slide-up 0.4s ease forwards',
           position: 'relative',
           zIndex: 10,
         }}
       >
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ width: '52px', height: '52px', borderRadius: '1rem', background: 'rgba(79,140,255,0.15)', border: '1px solid rgba(79,140,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', boxShadow: '0 0 20px rgba(79,140,255,0.25)' }}>
-            <Trophy size={24} style={{ color: '#fbbf24' }} />
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <div style={{ width: '60px', height: '60px', borderRadius: '1.25rem', background: 'rgba(79,140,255,0.15)', border: '1px solid rgba(79,140,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', boxShadow: '0 0 24px rgba(79,140,255,0.25)' }}>
+            <Trophy size={28} style={{ color: '#fbbf24' }} />
           </div>
-          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.6rem', color: '#fff', letterSpacing: '0.04em' }}>
+          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.8rem', color: '#fff', letterSpacing: '0.04em' }}>
             Host Tournament
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.8rem', fontFamily: 'Inter, sans-serif', marginTop: '0.35rem' }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', fontFamily: 'Inter, sans-serif', marginTop: '0.35rem' }}>
             Configure your tournament lobby
           </p>
         </div>
 
-        <form onSubmit={handleHost} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <form onSubmit={handleHost} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
           {/* Verse Select */}
           <div>
-            <label style={{ display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: '0.5rem' }}>
+            <label style={{ display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: '0.65rem' }}>
               Select Verse
             </label>
             <select
@@ -137,10 +137,10 @@ export const TournamentHost = () => {
 
           {/* Bracket Size */}
           <div>
-            <label style={{ display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: '0.75rem' }}>
+            <label style={{ display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: '0.85rem' }}>
               Bracket Size
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.6rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
               {BRACKET_SIZES.map(s => {
                 const active = playerCount === s.val;
                 return (

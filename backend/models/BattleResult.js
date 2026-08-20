@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 
 const roundSchema = new mongoose.Schema({
   role: { type: String, required: true },
-  charA: { type: Object, required: true },
-  charB: { type: Object, required: true },
+  charA: { type: Object, default: null },
+  charB: { type: Object, default: null },
   statA: { type: Number, required: true },
   statB: { type: Number, required: true },
   winner: { type: String, required: true }

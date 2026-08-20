@@ -81,21 +81,21 @@ export const TournamentJoin = () => {
       <div
         style={{
           width: '100%',
-          maxWidth: '420px',
+          maxWidth: '480px',
           background: 'rgba(15,15,26,0.9)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(192,132,252,0.2)',
-          borderRadius: '1.5rem',
+          borderRadius: '1.75rem',
           padding: '2.5rem',
-          boxShadow: '0 0 40px rgba(192,132,252,0.08), 0 24px 60px rgba(0,0,0,0.5)',
+          boxShadow: '0 0 50px rgba(192,132,252,0.08), 0 24px 80px rgba(0,0,0,0.6)',
           animation: 'slide-up 0.4s ease forwards',
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ width: '52px', height: '52px', borderRadius: '1rem', background: 'rgba(192,132,252,0.15)', border: '1px solid rgba(192,132,252,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', boxShadow: '0 0 20px rgba(192,132,252,0.2)' }}>
-            <Users size={24} style={{ color: '#d8b4fe' }} />
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <div style={{ width: '60px', height: '60px', borderRadius: '1.25rem', background: 'rgba(192,132,252,0.15)', border: '1px solid rgba(192,132,252,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', boxShadow: '0 0 24px rgba(192,132,252,0.25)' }}>
+            <Users size={28} style={{ color: '#d8b4fe' }} />
           </div>
-          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.6rem', color: '#fff', letterSpacing: '0.04em' }}>
+          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.8rem', color: '#fff', letterSpacing: '0.04em' }}>
             Join Tournament
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.8rem', fontFamily: 'Inter, sans-serif', marginTop: '0.35rem' }}>

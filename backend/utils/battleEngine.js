@@ -1,3 +1,18 @@
+/**
+ * Safely read a stat from a character object.
+ * Handles: Mongoose Map (char.stats.get), plain object (char.stats[key]),
+ * and undefined/null characters (returns 0).
+ */
+const getStat = (char, roleKey) => {
+  if (!char || !char.stats) return 0;
+  // Mongoose Map instance
+  if (typeof char.stats.get === 'function') {
+    return char.stats.get(roleKey) || 0;
+  }
+  // Plain object (after .lean() or JSON round-trip)
+  return char.stats[roleKey] || 0;
+};
+
 export const simulateBattle = (rosterA, rosterB, roles, player1Id, player2Id) => {
   let scoreA = 0;
   let scoreB = 0;
@@ -6,12 +21,11 @@ export const simulateBattle = (rosterA, rosterB, roles, player1Id, player2Id) =>
   // Iterate exactly in the order of the verse's roles
   roles.forEach(role => {
     const roleKey = role.key;
-    const charA = rosterA[roleKey];
-    const charB = rosterB[roleKey];
-    
-    // In case someone didn't draft (should be enforced, but fallback to 0)
-    const statA = charA ? (charA.stats[roleKey] || 0) : 0;
-    const statB = charB ? (charB.stats[roleKey] || 0) : 0;
+    const charA = rosterA[roleKey] || null;
+    const charB = rosterB[roleKey] || null;
+
+    const statA = getStat(charA, roleKey);
+    const statB = getStat(charB, roleKey);
 
     let winner = 'tie';
     if (statA > statB) {
@@ -24,8 +38,8 @@ export const simulateBattle = (rosterA, rosterB, roles, player1Id, player2Id) =>
 
     rounds.push({
       role: roleKey,
-      charA,
-      charB,
+      charA: charA || { name: 'Empty Slot', imageUrl: '', stats: {} },
+      charB: charB || { name: 'Empty Slot', imageUrl: '', stats: {} },
       statA,
       statB,
       winner
@@ -50,17 +64,13 @@ export const resolveTie = (rosterA, rosterB, roles, player1Id, player2Id) => {
   let totalStatB = 0;
 
   roles.forEach(role => {
-    const roleKey = role.key;
-    const charA = rosterA[roleKey];
-    const charB = rosterB[roleKey];
-    
-    totalStatA += charA ? (charA.stats[roleKey] || 0) : 0;
-    totalStatB += charB ? (charB.stats[roleKey] || 0) : 0;
+    totalStatA += getStat(rosterA[role.key], role.key);
+    totalStatB += getStat(rosterB[role.key], role.key);
   });
 
   if (totalStatA > totalStatB) return player1Id;
   if (totalStatB > totalStatA) return player2Id;
-  
-  // Astronomically unlikely fallback: default to p1 advancing
+
+  // Astronomically unlikely perfect tie: default to p1 advancing
   return player1Id;
 };

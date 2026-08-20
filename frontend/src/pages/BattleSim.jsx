@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { simulateBattle } from '../api/battles';
 import { getDraft } from '../api/drafts';
-import * as LucideIcons from 'lucide-react';
+import { Play, Pause, SkipForward, RefreshCcw, RotateCcw, Eye, EyeOff, Home, Trophy } from 'lucide-react';
 import { SettingsModal } from '../components/settings/SettingsModal';
 
 const SPEED_MAP = { 1: 1000, 2: 500, 3: 250 };
@@ -16,14 +16,12 @@ export const BattleSim = () => {
   const [result, setResult] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  // Playback state
+
   const [roundIdx, setRoundIdx] = useState(0);
   const [phase, setPhase] = useState(PHASES.INTRO);
   const [runningScoreA, setRunningScoreA] = useState(0);
   const [runningScoreB, setRunningScoreB] = useState(0);
-  
-  // Settings
+
   const [speed, setSpeed] = useState(1);
   const [hideStats, setHideStats] = useState(true);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
@@ -32,10 +30,9 @@ export const BattleSim = () => {
   const autoPlayTimer = useRef(null);
 
   useEffect(() => {
-    // Generate or fetch the battle result and draft session
     Promise.all([
       simulateBattle(sessionId),
-      getDraft(sessionId).catch(() => null)
+      getDraft(sessionId).catch(() => null),
     ])
       .then(([resData, sessData]) => {
         setResult(resData);
@@ -50,11 +47,9 @@ export const BattleSim = () => {
   const p1Name = session?.players[0]?.name || 'Player 1';
   const p2Name = session?.players[1]?.name || 'Player 2';
 
-  // Recalculate running score whenever roundIdx changes
   useEffect(() => {
     if (!result) return;
-    let sA = 0;
-    let sB = 0;
+    let sA = 0, sB = 0;
     for (let i = 0; i < roundIdx; i++) {
       const w = result.rounds[i].winner;
       if (w === p1Id || w === 'player1') sA++;
@@ -66,7 +61,6 @@ export const BattleSim = () => {
 
   const advanceState = useCallback(() => {
     if (!result) return;
-    
     setPhase(prev => {
       if (prev === PHASES.INTRO) return PHASES.REVEAL;
       if (prev === PHASES.REVEAL) {
@@ -87,9 +81,7 @@ export const BattleSim = () => {
     });
   }, [result, roundIdx, p1Id, p2Id]);
 
-  const resetRound = useCallback(() => {
-    setPhase(PHASES.INTRO);
-  }, []);
+  const resetRound = useCallback(() => { setPhase(PHASES.INTRO); }, []);
 
   const resetBattle = useCallback(() => {
     setRoundIdx(0);
@@ -97,42 +89,41 @@ export const BattleSim = () => {
     setIsAutoPlaying(false);
   }, []);
 
-  // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === ' ') {
-        e.preventDefault();
-        setIsAutoPlaying(prev => !prev);
-      } else if (e.key === 'Enter' || e.key === 'n' || e.key === 'N') {
-        setIsAutoPlaying(false);
-        advanceState();
-      } else if (e.key === 'r' || e.key === 'R') {
-        if (e.shiftKey) resetBattle();
-        else resetRound();
-      } else if (e.key === '1') setSpeed(1);
+      if (e.key === ' ') { e.preventDefault(); setIsAutoPlaying(p => !p); }
+      else if (e.key === 'Enter' || e.key === 'n' || e.key === 'N') { setIsAutoPlaying(false); advanceState(); }
+      else if (e.key === 'r' || e.key === 'R') { if (e.shiftKey) resetBattle(); else resetRound(); }
+      else if (e.key === '1') setSpeed(1);
       else if (e.key === '2') setSpeed(2);
       else if (e.key === '3') setSpeed(3);
-      else if (e.key === 'h' || e.key === 'H') setHideStats(prev => !prev);
+      else if (e.key === 'h' || e.key === 'H') setHideStats(p => !p);
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [advanceState, resetRound, resetBattle]);
 
-  // Autoplay loop
   useEffect(() => {
     if (isAutoPlaying && phase !== PHASES.END || (isAutoPlaying && roundIdx < 14)) {
-      autoPlayTimer.current = setTimeout(() => {
-        advanceState();
-      }, SPEED_MAP[speed]);
+      autoPlayTimer.current = setTimeout(() => { advanceState(); }, SPEED_MAP[speed]);
     } else {
       clearTimeout(autoPlayTimer.current);
     }
     return () => clearTimeout(autoPlayTimer.current);
   }, [isAutoPlaying, phase, roundIdx, speed, advanceState]);
 
-  if (loading) return <div className="min-h-screen bg-gray-900 flex items-center justify-center p-8 text-center text-xl font-bold text-gray-400">Simulating Battle...</div>;
-  if (!result) return <div className="min-h-screen bg-gray-900 flex items-center justify-center p-8 text-center text-red-500 font-bold">Error loading simulation</div>;
+  if (loading) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-base)', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ width: '48px', height: '48px', border: '3px solid rgba(108,99,255,0.3)', borderTop: '3px solid #818cf8', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <p style={{ fontFamily: 'Outfit, sans-serif', color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '0.85rem' }}>Simulating Battle…</p>
+    </div>
+  );
+
+  if (!result) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-base)' }}>
+      <p style={{ color: '#ef4444', fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>Error loading simulation</p>
+    </div>
+  );
 
   const round = result.rounds[roundIdx];
   const isBattleComplete = roundIdx === 14 && phase === PHASES.END;
@@ -140,168 +131,308 @@ export const BattleSim = () => {
   const p2Won = round.winner === p2Id || round.winner === 'player2';
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 text-gray-100 overflow-hidden relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-gray-900 to-slate-900 opacity-80 z-0"></div>
-      
-      {/* Header / Scoreboard */}
-      <div className="relative z-10 p-6 flex justify-center items-center">
-        <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md border border-gray-700 rounded-3xl px-12 py-4 flex items-center gap-12 shadow-2xl">
-          <div className="text-right">
-             <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{p1Name}</div>
-             <div className="text-4xl font-black text-blue-400">{runningScoreA}</div>
+    <div
+      style={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'var(--bg-base)',
+        overflow: 'hidden',
+        position: 'relative',
+        fontFamily: 'Outfit, sans-serif',
+      }}
+    >
+      {/* Ambient gradient */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(108,99,255,0.14) 0%, transparent 60%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: 'radial-gradient(ellipse at 50% 100%, rgba(192,132,252,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+
+      {/* Scoreboard / Header */}
+      <div
+        style={{
+          position: 'relative', zIndex: 10,
+          padding: '1.25rem 2rem',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          background: 'rgba(7,7,15,0.65)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex', alignItems: 'center', gap: '2.5rem',
+            background: 'rgba(15,15,26,0.9)', backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '1.25rem', padding: '1rem 2.5rem',
+            boxShadow: '0 0 30px rgba(0,0,0,0.5)',
+          }}
+        >
+          {/* P1 Score */}
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: '0.25rem' }}>{p1Name}</div>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '2.8rem', lineHeight: 1, color: '#60a5fa', textShadow: runningScoreA > runningScoreB ? '0 0 20px rgba(96,165,250,0.6)' : 'none', transition: 'text-shadow 0.3s' }}>{runningScoreA}</div>
           </div>
-          <div className="text-gray-600 font-black italic text-2xl">VS</div>
-          <div className="text-left">
-             <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{p2Name}</div>
-             <div className="text-4xl font-black text-red-400">{runningScoreB}</div>
+
+          {/* VS Divider */}
+          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.5rem', color: 'rgba(255,255,255,0.15)', fontStyle: 'italic', letterSpacing: '0.05em' }}>VS</div>
+
+          {/* P2 Score */}
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: '0.25rem' }}>{p2Name}</div>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '2.8rem', lineHeight: 1, color: '#f87171', textShadow: runningScoreB > runningScoreA ? '0 0 20px rgba(248,113,113,0.6)' : 'none', transition: 'text-shadow 0.3s' }}>{runningScoreB}</div>
           </div>
+        </div>
+
+        {/* Round badge */}
+        <div
+          style={{
+            position: 'absolute', right: '2rem',
+            padding: '0.4rem 1rem', borderRadius: '9999px',
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.7rem',
+            letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)',
+          }}
+        >
+          Round {roundIdx + 1} / {result.rounds.length}
+        </div>
+
+        <button onClick={() => navigate('/')}
+          style={{ position: 'absolute', left: '2rem', padding: '0.4rem 0.75rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem', transition: 'all 0.2s' }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+        >
+          <Home size={12} /> Menu
+        </button>
+      </div>
+
+      {/* Role label */}
+      <div style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'center', padding: '0.75rem', }}>
+        <div style={{ padding: '0.35rem 1.25rem', borderRadius: '9999px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+          {round.role.replace(/_/g, ' ')}
         </div>
       </div>
 
       {/* Main Stage */}
-      <div className="flex-1 flex flex-col items-center justify-center relative z-10 w-full max-w-7xl mx-auto">
-        <h2 className="absolute top-0 text-xl font-black text-gray-500 tracking-[0.2em] uppercase bg-gray-900 px-6 py-2 rounded-full border border-gray-800 shadow-md">
-          Round {roundIdx + 1} • {round.role.replace('_', ' ')}
-        </h2>
+      <div style={{ flex: 1, position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 3rem', overflow: 'hidden' }}>
 
-        <div className="flex w-full items-center justify-between px-8 mt-12">
-          
-          {/* Player 1 Character */}
-          <div className={`flex flex-col items-center w-1/3 transition-all duration-500 ${phase === PHASES.END && p1Won ? 'scale-110 z-20' : 'scale-100 z-10'} ${phase === PHASES.END && p2Won ? 'opacity-40 grayscale' : ''}`}>
-            <div className={`w-64 h-96 bg-gray-900 border-2 rounded-2xl flex items-center justify-center shadow-2xl overflow-hidden relative
-                ${phase === PHASES.END && p1Won ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.3)]' : 'border-gray-800'}
-              `}>
-                {round.charA?.imageUrl ? (
-                  <img src={round.charA.imageUrl} alt={round.charA.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-600 font-black text-6xl uppercase">
-                    {round.charA?.name?.substring(0, 2) || '?'}
-                  </div>
-                )}
-            </div>
-            
-            <div className="mt-6 text-center">
-              <h3 className="text-3xl font-black uppercase tracking-wide drop-shadow-md">{round.charA?.name || 'Missing'}</h3>
-              <div className={`bg-gray-900 border border-gray-700 rounded-xl px-8 py-3 mt-4 transition-opacity duration-300 ${hideStats && phase !== PHASES.END ? 'opacity-0' : 'opacity-100'}`}>
-                <span className="text-sm font-bold text-gray-500 uppercase mr-3">{round.role.replace('_', ' ')}</span>
-                <span className={`text-4xl font-black ${phase === PHASES.END && p1Won ? 'text-yellow-400' : 'text-gray-300'}`}>
-                  {round.statA}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* VS Center */}
-          <div className="flex flex-col items-center justify-center w-1/3 z-30 pointer-events-none">
-            {phase === PHASES.INTRO && (
-              <div className="text-8xl font-black text-gray-700 italic tracking-tighter animate-pulse opacity-50">VS</div>
-            )}
-            {phase === PHASES.REVEAL && (
-              <div className="text-8xl font-black text-yellow-500 italic tracking-tighter scale-150 transition-transform duration-300 drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]">VS</div>
-            )}
-            {phase === PHASES.END && (
-              <div className="flex flex-col items-center bg-gray-900 border-2 border-gray-700 px-10 py-6 rounded-full shadow-[0_0_40px_rgba(0,0,0,0.8)] animate-bounce">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-[0.3em] mb-2">Winner</span>
-                <span className={`text-3xl font-black uppercase tracking-widest
-                  ${p1Won ? 'text-yellow-400' : p2Won ? 'text-red-400' : 'text-gray-400'}`}>
-                  {round.winner === 'tie' ? 'TIE' : (p1Won ? p1Name : p2Name)}
-                </span>
+        {/* P1 Character */}
+        <div
+          style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            transition: 'all 0.5s ease',
+            transform: phase === PHASES.END && p1Won ? 'scale(1.08)' : 'scale(1)',
+            opacity: phase === PHASES.END && p2Won ? 0.35 : 1,
+            filter: phase === PHASES.END && p2Won ? 'grayscale(80%)' : 'none',
+          }}
+        >
+          <div style={{
+            width: '220px', height: '320px', borderRadius: '1.25rem', overflow: 'hidden',
+            border: phase === PHASES.END && p1Won ? '2px solid #fbbf24' : '2px solid rgba(255,255,255,0.08)',
+            background: 'rgba(15,15,26,0.8)',
+            boxShadow: phase === PHASES.END && p1Won ? '0 0 50px rgba(251,191,36,0.35)' : '0 20px 50px rgba(0,0,0,0.5)',
+            transition: 'all 0.4s ease',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {round.charA?.imageUrl ? (
+              <img src={round.charA.imageUrl} alt={round.charA.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '4rem', color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase' }}>
+                {round.charA?.name?.substring(0, 2) || '?'}
               </div>
             )}
           </div>
+          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.4rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginTop: '1.25rem', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+            {round.charA?.name || 'Missing'}
+          </h3>
+          <div style={{ opacity: hideStats && phase !== PHASES.END ? 0 : 1, transition: 'opacity 0.3s', marginTop: '0.75rem', background: 'rgba(15,15,26,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.875rem', padding: '0.6rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>{round.role.replace(/_/g, ' ')}</span>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '2.2rem', color: phase === PHASES.END && p1Won ? '#fbbf24' : '#fff', textShadow: phase === PHASES.END && p1Won ? '0 0 20px rgba(251,191,36,0.6)' : 'none', transition: 'all 0.3s' }}>{round.statA}</span>
+          </div>
+        </div>
 
-          {/* Player 2 Character */}
-          <div className={`flex flex-col items-center w-1/3 transition-all duration-500 ${phase === PHASES.END && p2Won ? 'scale-110 z-20' : 'scale-100 z-10'} ${phase === PHASES.END && p1Won ? 'opacity-40 grayscale' : ''}`}>
-            <div className={`w-64 h-96 bg-gray-900 border-2 rounded-2xl flex items-center justify-center shadow-2xl overflow-hidden relative
-                ${phase === PHASES.END && p2Won ? 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.3)]' : 'border-gray-800'}
-              `}>
-                {round.charB?.imageUrl ? (
-                  <img src={round.charB.imageUrl} alt={round.charB.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-600 font-black text-6xl uppercase">
-                    {round.charB?.name?.substring(0, 2) || '?'}
-                  </div>
-                )}
-            </div>
-            
-            <div className="mt-6 text-center">
-              <h3 className="text-3xl font-black uppercase tracking-wide drop-shadow-md">{round.charB?.name || 'Missing'}</h3>
-              <div className={`bg-gray-900 border border-gray-700 rounded-xl px-8 py-3 mt-4 transition-opacity duration-300 ${hideStats && phase !== PHASES.END ? 'opacity-0' : 'opacity-100'}`}>
-                <span className="text-sm font-bold text-gray-500 uppercase mr-3">{round.role.replace('_', ' ')}</span>
-                <span className={`text-4xl font-black ${phase === PHASES.END && p2Won ? 'text-red-400' : 'text-gray-300'}`}>
-                  {round.statB}
-                </span>
+        {/* VS / Winner Center */}
+        <div style={{ width: '160px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0, gap: '1rem' }}>
+          {phase === PHASES.INTRO && (
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '5rem', fontStyle: 'italic', color: 'rgba(255,255,255,0.08)', lineHeight: 1, letterSpacing: '-0.02em' }}>VS</div>
+          )}
+          {phase === PHASES.REVEAL && (
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '5rem', fontStyle: 'italic', color: '#fbbf24', lineHeight: 1, letterSpacing: '-0.02em', textShadow: '0 0 40px rgba(251,191,36,0.6)', transform: 'scale(1.2)', transition: 'all 0.3s ease' }}>VS</div>
+          )}
+          {phase === PHASES.END && (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              background: 'rgba(15,15,26,0.95)', border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '1.25rem', padding: '1.25rem 1.5rem',
+              boxShadow: '0 0 40px rgba(0,0,0,0.8)',
+              animation: 'slide-up 0.3s ease forwards',
+            }}>
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '0.5rem' }}>Winner</div>
+              <div style={{
+                fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.4rem', textTransform: 'uppercase', letterSpacing: '0.04em',
+                color: round.winner === 'tie' ? 'rgba(255,255,255,0.5)' : p1Won ? '#fbbf24' : '#f87171',
+                textShadow: p1Won ? '0 0 16px rgba(251,191,36,0.5)' : p2Won ? '0 0 16px rgba(248,113,113,0.5)' : 'none',
+              }}>
+                {round.winner === 'tie' ? 'Tie' : p1Won ? p1Name : p2Name}
               </div>
             </div>
-          </div>
+          )}
+        </div>
 
+        {/* P2 Character */}
+        <div
+          style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            transition: 'all 0.5s ease',
+            transform: phase === PHASES.END && p2Won ? 'scale(1.08)' : 'scale(1)',
+            opacity: phase === PHASES.END && p1Won ? 0.35 : 1,
+            filter: phase === PHASES.END && p1Won ? 'grayscale(80%)' : 'none',
+          }}
+        >
+          <div style={{
+            width: '220px', height: '320px', borderRadius: '1.25rem', overflow: 'hidden',
+            border: phase === PHASES.END && p2Won ? '2px solid #f87171' : '2px solid rgba(255,255,255,0.08)',
+            background: 'rgba(15,15,26,0.8)',
+            boxShadow: phase === PHASES.END && p2Won ? '0 0 50px rgba(248,113,113,0.35)' : '0 20px 50px rgba(0,0,0,0.5)',
+            transition: 'all 0.4s ease',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {round.charB?.imageUrl ? (
+              <img src={round.charB.imageUrl} alt={round.charB.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '4rem', color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase' }}>
+                {round.charB?.name?.substring(0, 2) || '?'}
+              </div>
+            )}
+          </div>
+          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.4rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginTop: '1.25rem', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+            {round.charB?.name || 'Missing'}
+          </h3>
+          <div style={{ opacity: hideStats && phase !== PHASES.END ? 0 : 1, transition: 'opacity 0.3s', marginTop: '0.75rem', background: 'rgba(15,15,26,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.875rem', padding: '0.6rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>{round.role.replace(/_/g, ' ')}</span>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '2.2rem', color: phase === PHASES.END && p2Won ? '#f87171' : '#fff', textShadow: phase === PHASES.END && p2Won ? '0 0 20px rgba(248,113,113,0.6)' : 'none', transition: 'all 0.3s' }}>{round.statB}</span>
+          </div>
         </div>
       </div>
 
       {/* Controls Bar */}
-      <div className="relative z-20 bg-gray-900 bg-opacity-80 backdrop-blur-lg border-t border-gray-800 p-6 flex justify-between items-center">
-        <div className="flex gap-4">
-           <button onClick={() => setIsAutoPlaying(p => !p)} className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition-colors">
-             {isAutoPlaying ? <LucideIcons.Pause size={16} className="text-yellow-500" /> : <LucideIcons.Play size={16} className="text-green-500" />}
-             Auto (Space)
-           </button>
-           <button onClick={advanceState} className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition-colors">
-             <LucideIcons.SkipForward size={16} className="text-blue-400" /> Next (N)
-           </button>
-           <button onClick={resetRound} className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition-colors">
-             <LucideIcons.RefreshCcw size={16} className="text-purple-400" /> Replay Round
-           </button>
+      <div
+        style={{
+          position: 'relative', zIndex: 10,
+          padding: '1rem 1.5rem',
+          background: 'rgba(7,7,15,0.8)',
+          backdropFilter: 'blur(12px)',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '0.75rem',
+        }}
+      >
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {/* Auto / Pause */}
+          <button
+            onClick={() => setIsAutoPlaying(p => !p)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.1rem', borderRadius: '0.75rem', border: isAutoPlaying ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(255,255,255,0.1)', background: isAutoPlaying ? 'rgba(251,191,36,0.12)' : 'rgba(255,255,255,0.05)', color: isAutoPlaying ? '#fde68a' : 'rgba(255,255,255,0.55)', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            {isAutoPlaying ? <Pause size={14} /> : <Play size={14} />}
+            {isAutoPlaying ? 'Pause' : 'Auto'} <span style={{ opacity: 0.5, fontSize: '0.6rem' }}>Space</span>
+          </button>
+
+          {/* Next */}
+          <button
+            onClick={advanceState}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.1rem', borderRadius: '0.75rem', border: '1px solid rgba(79,140,255,0.25)', background: 'rgba(79,140,255,0.1)', color: '#93c5fd', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            <SkipForward size={14} /> Next <span style={{ opacity: 0.5, fontSize: '0.6rem' }}>N</span>
+          </button>
+
+          {/* Replay round */}
+          <button
+            onClick={resetRound}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.1rem', borderRadius: '0.75rem', border: '1px solid rgba(192,132,252,0.25)', background: 'rgba(192,132,252,0.08)', color: '#d8b4fe', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            <RefreshCcw size={14} /> Replay
+          </button>
         </div>
-        
-        <div className="flex gap-4">
-           <div className="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-600">
-             <button onClick={() => setSpeed(1)} className={`px-4 py-3 text-xs font-black transition-colors ${speed === 1 ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}>1x</button>
-             <button onClick={() => setSpeed(2)} className={`px-4 py-3 text-xs font-black transition-colors border-l border-r border-gray-600 ${speed === 2 ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}>2x</button>
-             <button onClick={() => setSpeed(3)} className={`px-4 py-3 text-xs font-black transition-colors ${speed === 3 ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}>3x</button>
-           </div>
-           
-           <button onClick={() => setHideStats(p => !p)} className="flex items-center gap-2 text-gray-400 hover:text-white bg-gray-800 border border-gray-600 px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition-colors">
-             {hideStats ? <LucideIcons.EyeOff size={16} /> : <LucideIcons.Eye size={16} />}
-           </button>
-           
-           <button onClick={resetBattle} className="flex items-center gap-2 bg-red-900/30 hover:bg-red-900/60 text-red-400 border border-red-900/50 px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition-colors">
-             <LucideIcons.RotateCcw size={16} /> Restart Battle
-           </button>
+
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {/* Speed */}
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.625rem', overflow: 'hidden' }}>
+            {[1, 2, 3].map(s => (
+              <button
+                key={s}
+                onClick={() => setSpeed(s)}
+                style={{ padding: '0.5rem 0.75rem', border: 'none', background: speed === s ? 'rgba(108,99,255,0.25)' : 'transparent', color: speed === s ? '#c4b5fd' : 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.7rem', cursor: 'pointer', transition: 'all 0.2s', borderRight: s < 3 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
+
+          {/* Hide stats */}
+          <button
+            onClick={() => setHideStats(p => !p)}
+            style={{ display: 'flex', alignItems: 'center', padding: '0.6rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.08)', background: hideStats ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.2s' }}
+            title={hideStats ? 'Show Stats' : 'Hide Stats'}
+          >
+            {hideStats ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+
+          {/* Restart battle */}
+          <button
+            onClick={resetBattle}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem', borderRadius: '0.75rem', border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', color: '#fca5a5', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            <RotateCcw size={13} /> Restart
+          </button>
         </div>
       </div>
 
       {/* Battle Complete Modal */}
       {isBattleComplete && (
-        <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center z-50">
-          <h2 className="text-4xl font-black uppercase tracking-[0.3em] text-gray-400 mb-8">Simulation Complete</h2>
-          <div className="text-9xl font-black font-mono flex items-center gap-12 mb-16 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-            <span className="text-blue-500">{runningScoreA}</span>
-            <span className="text-gray-700 text-6xl">-</span>
-            <span className="text-red-500">{runningScoreB}</span>
-          </div>
-          
-          <div className="text-4xl font-black italic uppercase tracking-widest mb-16 bg-gray-900 px-16 py-8 rounded-full border-4 border-gray-800 shadow-2xl">
-            {result.overallWinner === 'tie' ? (
-              <span className="text-gray-300">It's a Tie!</span>
-            ) : (result.overallWinner === p1Id || result.overallWinner === 'player1') ? (
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200">{p1Name} Wins!</span>
-            ) : (
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-400">{p2Name} Wins!</span>
-            )}
-          </div>
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(7,7,15,0.92)', backdropFilter: 'blur(16px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 50, animation: 'fade-in 0.3s ease forwards' }}>
+          <div style={{ textAlign: 'center', animation: 'slide-up 0.4s ease forwards' }}>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '1.5rem' }}>Simulation Complete</div>
 
-          <div className="flex gap-4">
-            {session?.mode === 'tournament' && (
-              <button onClick={() => navigate(`/tournament/${session.tournamentId}`)} className="px-10 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold uppercase tracking-widest transition-colors">
-                Back to Bracket
+            {/* Final Score */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', justifyContent: 'center', marginBottom: '2rem' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '0.5rem' }}>{p1Name}</div>
+                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '6rem', lineHeight: 1, color: '#60a5fa', textShadow: '0 0 30px rgba(96,165,250,0.5)' }}>{runningScoreA}</div>
+              </div>
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '2rem', color: 'rgba(255,255,255,0.15)', fontStyle: 'italic' }}>—</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '0.5rem' }}>{p2Name}</div>
+                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '6rem', lineHeight: 1, color: '#f87171', textShadow: '0 0 30px rgba(248,113,113,0.5)' }}>{runningScoreB}</div>
+              </div>
+            </div>
+
+            {/* Winner Badge */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 2.5rem', borderRadius: '1rem', background: result.overallWinner === 'tie' ? 'rgba(255,255,255,0.06)' : (result.overallWinner === p1Id || result.overallWinner === 'player1') ? 'rgba(96,165,250,0.12)' : 'rgba(248,113,113,0.12)', border: result.overallWinner === 'tie' ? '1px solid rgba(255,255,255,0.1)' : (result.overallWinner === p1Id || result.overallWinner === 'player1') ? '1px solid rgba(96,165,250,0.3)' : '1px solid rgba(248,113,113,0.3)', marginBottom: '2.5rem', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
+              <Trophy size={24} style={{ color: result.overallWinner === 'tie' ? 'rgba(255,255,255,0.4)' : '#fbbf24' }} />
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: result.overallWinner === 'tie' ? 'rgba(255,255,255,0.5)' : (result.overallWinner === p1Id || result.overallWinner === 'player1') ? '#93c5fd' : '#fca5a5' }}>
+                {result.overallWinner === 'tie' ? "It's a Tie!" : (result.overallWinner === p1Id || result.overallWinner === 'player1') ? `${p1Name} Wins!` : `${p2Name} Wins!`}
+              </span>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              {session?.mode === 'tournament' && (
+                <button onClick={() => navigate(`/tournament/${session.tournamentId}`)} style={{ padding: '0.875rem 1.75rem', borderRadius: '0.875rem', border: '1px solid rgba(192,132,252,0.3)', background: 'rgba(192,132,252,0.12)', color: '#d8b4fe', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  🏆 Back to Bracket
+                </button>
+              )}
+              <button onClick={resetBattle} style={{ padding: '0.875rem 1.75rem', borderRadius: '0.875rem', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <RotateCcw size={15} /> Watch Replay
               </button>
-            )}
-            <button onClick={resetBattle} className="px-10 py-4 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-bold uppercase tracking-widest flex items-center gap-2 border border-gray-600 transition-colors">
-              <LucideIcons.RotateCcw /> Watch Replay
-            </button>
-            <button onClick={() => navigate('/')} className="px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold uppercase tracking-widest flex items-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-colors">
-              <LucideIcons.Home /> Main Menu
-            </button>
+              <button onClick={() => navigate('/')} style={{ padding: '0.875rem 1.75rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg, #2563eb, #4f8cff)', color: '#fff', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 0 24px rgba(79,140,255,0.4)', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+              >
+                <Home size={15} /> Main Menu
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -60,6 +60,17 @@ const run = async () => {
     console.log(`Found ${characters.length} characters to update.`);
 
     const imageCache = {}; // Cache to avoid duplicate requests for the same base character
+    
+    // Pre-fill cache with existing images to avoid re-fetching on resume
+    characters.forEach(char => {
+      if (char.imageUrl && char.imageUrl !== 'https://via.placeholder.com/150?text=No+Image') {
+        let baseName = char.name.replace(/\s*\([^)]*\)\s*/g, '').trim();
+        if (baseName === 'A') baseName = 'Fourth Raikage';
+        if (baseName === 'Pain (Deva Path)') baseName = 'Pain';
+        imageCache[baseName] = char.imageUrl;
+      }
+    });
+
     let updateCount = 0;
 
     for (let i = 0; i < characters.length; i++) {

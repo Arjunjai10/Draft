@@ -127,6 +127,15 @@ export const BattleSim = () => {
     </div>
   );
 
+  // Guard: rounds array must be non-empty before any round-level access.
+  // result.rounds can be [] if the BattleResult was saved without rounds (edge-case
+  // from a previous bad save), or if the API returned a cached stale document.
+  if (!result.rounds || result.rounds.length === 0) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-base)' }}>
+      <p style={{ color: '#ef4444', fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>Battle result has no rounds — try re-simulating.</p>
+    </div>
+  );
+
   const round = result.rounds[roundIdx];
   const isBattleComplete = roundIdx === result.rounds.length - 1 && phase === PHASES.END;
   const p1Won = round.winner === p1Id || round.winner === 'player1';
@@ -237,7 +246,12 @@ export const BattleSim = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             {round.charA?.imageUrl ? (
-              <img src={round.charA.imageUrl} alt={round.charA.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img
+                src={round.charA.imageUrl}
+                alt={round.charA.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={e => { e.currentTarget.style.display = 'none'; }}
+              />
             ) : (
               <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '4rem', color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase' }}>
                 {round.charA?.name?.substring(0, 2) || '?'}
@@ -300,7 +314,12 @@ export const BattleSim = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             {round.charB?.imageUrl ? (
-              <img src={round.charB.imageUrl} alt={round.charB.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img
+                src={round.charB.imageUrl}
+                alt={round.charB.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={e => { e.currentTarget.style.display = 'none'; }}
+              />
             ) : (
               <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '4rem', color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase' }}>
                 {round.charB?.name?.substring(0, 2) || '?'}

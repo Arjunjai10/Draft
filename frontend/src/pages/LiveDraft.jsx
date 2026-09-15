@@ -296,7 +296,11 @@ export const LiveDraft = () => {
             onMouseUp={e => { e.currentTarget.style.transform = 'scale(1.05)'; }}
           >
             <Zap size={18} fill="currentColor" />
-            {player1.name}'s Draw
+            {/* U1: was hardcoded to player1.name regardless of who the local player is */}
+            {(socket
+              ? (localPlayerId === player2.id ? player2.name : player1.name)
+              : currentPlayer?.name ?? player1.name
+            )}'s Draw
           </button>
         </div>
       )}
@@ -309,7 +313,8 @@ export const LiveDraft = () => {
               try {
                 if (session.mode === 'cpu' || session.mode === 'local') {
                   const { updateDraft } = await import('../api/drafts');
-                  await updateDraft(session._id, { status: 'complete', rosters: session.rosters });
+                  const token = localStorage.getItem(`draft_${session._id}_token`);
+                  await updateDraft(session._id, { status: 'complete', rosters: session.rosters, playerToken: token });
                 }
                 navigate(`/battle/${session._id}`);
               } catch {

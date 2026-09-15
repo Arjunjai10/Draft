@@ -16,6 +16,9 @@ const characterSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Hot-path index: Character.find({ verseId }) on every battle simulation
+characterSchema.index({ verseId: 1 });
+
 const Character = mongoose.model('Character', characterSchema);
 
 export default Character;

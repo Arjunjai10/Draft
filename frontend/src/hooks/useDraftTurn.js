@@ -1,13 +1,29 @@
 import { useState, useCallback, useEffect } from 'react';
 import { pickBestRoleForCharacter } from '../utils/cpuAI.js';
 
+/**
+ * pickRandom — module-level pure function.
+ * Returns a random available character or null.
+ * Extracted from the useCallback so passTurn can call it with explicit
+ * arguments instead of reading from a stale closure (C4 fix).
+ */
+function pickRandom(allCharacters, draftedCharacterIds, excludedCharacters) {
+  const available = allCharacters.filter(c =>
+    !draftedCharacterIds.has(c._id) &&
+    !(excludedCharacters || []).includes(c._id)
+  );
+  if (available.length === 0) return null;
+  return available[Math.floor(Math.random() * available.length)];
+}
+
 export const useDraftTurn = (sessionData, allCharacters, socket = null, localPlayerId = null) => {
   const [session, setSession] = useState(sessionData);
 
+  // C3: Always sync from the prop. Old guard `if (sessionData && !session)`
+  // silently dropped all prop updates after the first non-null value arrived,
+  // so reconnect-triggered re-fetches never updated the local session state.
   useEffect(() => {
-    if (sessionData && !session) {
-      setSession(sessionData);
-    }
+    if (sessionData) setSession(sessionData);
   }, [sessionData]);
 
   const [draftedCharacterIds, setDraftedCharacterIds] = useState(new Set());
@@ -19,10 +35,8 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   const currentPlayer = session?.players.find(p => p.id === currentTurnPlayerId);
 
   const isSocketMode = Boolean(socket) && (session?.mode === 'online' || session?.mode === 'tournament');
-  // In local/cpu mode, the single client window acts on behalf of all players.
-  // In online/tournament mode, only the localPlayerId is "local"
-  const isLocalTurn = (session?.mode === 'online' || session?.mode === 'tournament') 
-    ? currentTurnPlayerId === localPlayerId 
+  const isLocalTurn = (session?.mode === 'online' || session?.mode === 'tournament')
+    ? currentTurnPlayerId === localPlayerId
     : true;
 
   // Socket listeners
@@ -47,15 +61,19 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
       setDrawnCharacter(character);
     };
 
+    // U2: Capture handleJoined as a named reference so socket.off removes
+    // only this specific handler and not every draft:joined listener on the socket.
+    const handleJoined = ({ session }) => handleUpdate(session);
+
     socket.on('draft:state', handleUpdate);
     socket.on('draft:update', handleUpdate);
-    socket.on('draft:joined', ({ session }) => handleUpdate(session));
+    socket.on('draft:joined', handleJoined);
     socket.on('draft:draw', handleDraw);
 
     return () => {
       socket.off('draft:state', handleUpdate);
       socket.off('draft:update', handleUpdate);
-      socket.off('draft:joined');
+      socket.off('draft:joined', handleJoined);
       socket.off('draft:draw', handleDraw);
     };
   }, [socket, isSocketMode]);
@@ -69,17 +87,11 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   const drawCharacter = useCallback(() => {
     if (!session || isComplete || drawnCharacter || isCPUThinking || !isLocalTurn) return;
 
-    const availableCharacters = allCharacters.filter(c => 
-      !draftedCharacterIds.has(c._id) && 
-      !(session.excludedCharacters || []).includes(c._id)
-    );
-    if (availableCharacters.length === 0) {
-      console.warn("No characters left to draw!");
+    const selected = pickRandom(allCharacters, draftedCharacterIds, session.excludedCharacters);
+    if (!selected) {
+      console.warn('No characters left to draw!');
       return;
     }
-
-    const randomIndex = Math.floor(Math.random() * availableCharacters.length);
-    const selected = availableCharacters[randomIndex];
     setDrawnCharacter(selected);
 
     if (isSocketMode) {
@@ -88,10 +100,9 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   }, [session, isComplete, drawnCharacter, isCPUThinking, allCharacters, draftedCharacterIds, isLocalTurn, socket, isSocketMode]);
 
   const nextTurn = useCallback((updatedRosters, updatedPasses) => {
-    let nextIndex = session.currentTurnIndex + 1;
+    const nextIndex = session.currentTurnIndex + 1;
     let newStatus = session.status;
-    
-    // Check if both rosters are full (15 each)
+
     let totalAssigned = 0;
     Object.values(updatedRosters).forEach(roster => {
       totalAssigned += Object.keys(roster).length;
@@ -127,7 +138,7 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
 
     const updatedRosters = { ...session.rosters };
     if (!updatedRosters[currentTurnPlayerId]) updatedRosters[currentTurnPlayerId] = {};
-    
+
     updatedRosters[currentTurnPlayerId] = {
       ...updatedRosters[currentTurnPlayerId],
       [roleKey]: drawnCharacter._id
@@ -140,9 +151,9 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
   const passTurn = useCallback(() => {
     if (!currentTurnPlayerId || !isLocalTurn) return;
     const passes = session.passesRemaining[currentTurnPlayerId] || 0;
-    
+
     if (passes <= 0) {
-      console.warn("No passes remaining. Forced assignment required.");
+      console.warn('No passes remaining. Forced assignment required.');
       return;
     }
 
@@ -151,22 +162,26 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
         draftId: session._id,
         playerId: currentTurnPlayerId
       });
-      return; // Server will broadcast draft:update
+      return; // Server will broadcast draft:update which clears drawnCharacter via handleUpdate
     }
 
+    // Local mode — C4 fix:
+    // Old code called drawCharacter() here, but drawCharacter reads drawnCharacter from
+    // its closure. Since setDrawnCharacter(null) is async, drawnCharacter was still
+    // truthy inside drawCharacter's closure and it returned immediately — the pass drew
+    // nothing. Fix: call pickRandom directly with explicit arguments, bypassing the
+    // closure guard entirely.
     const updatedPasses = {
       ...session.passesRemaining,
       [currentTurnPlayerId]: passes - 1
     };
-    
-    // Pass redraws instantly
     setSession(prev => ({ ...prev, passesRemaining: updatedPasses }));
-    setDrawnCharacter(null);
-    drawCharacter(); // Redraw immediately
-  }, [currentTurnPlayerId, session, drawCharacter, isLocalTurn, socket, isSocketMode]);
+    const selected = pickRandom(allCharacters, draftedCharacterIds, session.excludedCharacters);
+    setDrawnCharacter(selected || null);
+  }, [currentTurnPlayerId, session, isLocalTurn, socket, isSocketMode, allCharacters, draftedCharacterIds]);
 
-  // CPU auto-turn state machine
-  
+  // ── CPU auto-turn state machine ──────────────────────────────────────────
+
   // 1. When it becomes CPU's turn and no character is drawn, start thinking
   useEffect(() => {
     if (session?.mode === 'cpu' && !isComplete && currentPlayer?.isCPU && !drawnCharacter && !isCPUThinking) {
@@ -174,21 +189,13 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
     }
   }, [session?.mode, isComplete, currentPlayer?.isCPU, drawnCharacter, isCPUThinking]);
 
-  // 2. When CPU is thinking and no character is drawn, draw a character after 500ms
+  // 2. When CPU is thinking and no character is drawn, pick one after 500ms
   useEffect(() => {
     if (session?.mode === 'cpu' && !isComplete && currentPlayer?.isCPU && isCPUThinking && !drawnCharacter) {
       const timer = setTimeout(() => {
-        const availableCharacters = allCharacters.filter(c => 
-          !draftedCharacterIds.has(c._id) && 
-          !(session.excludedCharacters || []).includes(c._id)
-        );
-        if (availableCharacters.length > 0) {
-          const randomIndex = Math.floor(Math.random() * availableCharacters.length);
-          const charToAssign = availableCharacters[randomIndex];
-          setDrawnCharacter(charToAssign);
-        } else {
-          setIsCPUThinking(false); // Failsafe
-        }
+        const selected = pickRandom(allCharacters, draftedCharacterIds, session?.excludedCharacters);
+        if (selected) setDrawnCharacter(selected);
+        else setIsCPUThinking(false); // Failsafe: no characters left
       }, 500);
       return () => clearTimeout(timer);
     }
@@ -217,6 +224,6 @@ export const useDraftTurn = (sessionData, allCharacters, socket = null, localPla
     assignCharacter,
     passTurn,
     getOpenRoles,
-    setSession // Exposed so we can update session from LiveDraft if needed
+    setSession // Exposed so LiveDraft can update session if needed
   };
 };

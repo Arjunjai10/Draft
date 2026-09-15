@@ -31,6 +31,9 @@ const draftSessionSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Used in tournament bracket advancement lookup (battles route)
+draftSessionSchema.index({ tournamentId: 1 });
+
 const DraftSession = mongoose.model('DraftSession', draftSessionSchema);
 
 export default DraftSession;

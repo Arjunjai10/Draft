@@ -105,7 +105,15 @@ router.put('/:id', async (req, res) => {
   try {
     const session = await DraftSession.findById(req.params.id);
     if (!session) return res.status(404).json({ error: 'Session not found' });
-    
+
+    // S4: Require a player token that belongs to this session.
+    // Old behaviour: any caller who knew the draftId (in the URL) could
+    // POST { status: 'complete' } with no credentials whatsoever.
+    const { playerToken } = req.body;
+    if (!playerToken || !session.players.some(p => p.token === playerToken)) {
+      return res.status(403).json({ error: 'Forbidden: invalid or missing player token' });
+    }
+
     if (req.body.status) session.status = req.body.status;
     if (req.body.rosters) {
       session.rosters = new Map();
@@ -113,7 +121,7 @@ router.put('/:id', async (req, res) => {
         session.rosters.set(playerId, new Map(Object.entries(roster)));
       });
     }
-    
+
     const savedSession = await session.save();
     res.json(savedSession);
   } catch (error) {
@@ -122,41 +130,42 @@ router.put('/:id', async (req, res) => {
 });
 
 // POST /api/drafts/:id/debug-complete
-router.post('/:id/debug-complete', async (req, res) => {
-  try {
-    const session = await DraftSession.findById(req.params.id);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
-    
-    session.status = 'complete';
-    
-    // Fill rosters with fake character IDs for 15 roles each just so the simulation doesn't crash
-    const rosters = session.rosters || {};
-    const verse = await mongoose.model('Verse').findById(session.verseId);
-    const roles = verse.roles.map(r => r.key);
-    const p1Id = session.players[0]?.id || 'player1';
-    const p2Id = session.players[1]?.id || 'player2';
-    
-    // We actually need real DB character IDs for the simulation to work.
-    const chars = await mongoose.model('Character').find({ verseId: session.verseId });
-    
-    rosters[p1Id] = {};
-    rosters[p2Id] = {};
-    
-    for (let i = 0; i < roles.length; i++) {
-      if (chars[i]) rosters[p1Id][roles[i]] = chars[i]._id.toString();
-      if (chars[roles.length + i]) rosters[p2Id][roles[i]] = chars[roles.length + i]._id.toString();
+// DEV ONLY — gated so it cannot be reached in production.
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/:id/debug-complete', async (req, res) => {
+    try {
+      const session = await DraftSession.findById(req.params.id);
+      if (!session) return res.status(404).json({ error: 'Session not found' });
+
+      session.status = 'complete';
+
+      const rosters = session.rosters || {};
+      const verse = await mongoose.model('Verse').findById(session.verseId);
+      const roles = verse.roles.map(r => r.key);
+      const p1Id = session.players[0]?.id || 'player1';
+      const p2Id = session.players[1]?.id || 'player2';
+
+      const chars = await mongoose.model('Character').find({ verseId: session.verseId });
+
+      rosters[p1Id] = {};
+      rosters[p2Id] = {};
+
+      for (let i = 0; i < roles.length; i++) {
+        if (chars[i])                  rosters[p1Id][roles[i]] = chars[i]._id.toString();
+        if (chars[roles.length + i])   rosters[p2Id][roles[i]] = chars[roles.length + i]._id.toString();
+      }
+
+      session.rosters = new Map([
+        [p1Id, new Map(Object.entries(rosters[p1Id]))],
+        [p2Id, new Map(Object.entries(rosters[p2Id]))]
+      ]);
+      session.markModified('rosters');
+      const savedSession = await session.save();
+      res.json(savedSession);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-    
-    session.rosters = new Map([
-      [p1Id, new Map(Object.entries(rosters[p1Id]))],
-      [p2Id, new Map(Object.entries(rosters[p2Id]))]
-    ]);
-    session.markModified('rosters');
-    const savedSession = await session.save();
-    res.json(savedSession);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  });
+}
 
 export default router;

@@ -17,6 +17,10 @@ const battleResultSchema = new mongoose.Schema({
   rounds: [roundSchema]
 }, { timestamps: true });
 
+// Unique index: one result per draft. Also closes the double-write race:
+// a concurrent duplicate save throws code 11000 which the route catches.
+battleResultSchema.index({ draftId: 1 }, { unique: true });
+
 const BattleResult = mongoose.model('BattleResult', battleResultSchema);
 
 export default BattleResult;

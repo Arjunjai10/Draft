@@ -80,13 +80,31 @@ router.post('/:draftId/simulate', async (req, res) => {
     if (result.overallWinner === player1) historyResult = 'player1';
     else if (result.overallWinner === player2) historyResult = 'player2';
 
+    // C6: Build a denormalised picks snapshot.
+    // characterName is frozen at write time — display is correct forever
+    // even if the Character document is later edited or removed.
+    const formatPicks = (rosterObj) => {
+      const out = {};
+      Object.entries(rosterObj).forEach(([roleKey, char]) => {
+        if (char) out[roleKey] = { characterId: char._id, characterName: char.name };
+      });
+      return out;
+    };
+
     const historyEntry = new MatchHistory({
-      userId: null,
+      draftId:      session._id,
+      userId:       null,
+      player1Name:  session.players[0]?.name || 'Player 1',
+      player2Name:  session.players[1]?.name || 'Player 2',
       opponentName: session.players[1]?.name || 'CPU',
-      verseId: verse._id,
-      mode: session.mode,
-      score: { p1: result.scoreA, p2: result.scoreB },
-      result: historyResult
+      verseId:      verse._id,
+      mode:         session.mode,
+      score:        { p1: result.scoreA, p2: result.scoreB },
+      result:       historyResult,
+      picks: {
+        player1: formatPicks(rosterA),
+        player2: formatPicks(rosterB)
+      }
     });
     await historyEntry.save();
 
@@ -172,6 +190,13 @@ router.post('/:draftId/simulate', async (req, res) => {
     res.json(savedResult);
 
   } catch (error) {
+    // C5: The unique index on BattleResult.draftId converts the double-write race
+    // into a duplicate-key error (code 11000) rather than a silent duplicate save.
+    // Return the winner (whichever request saved first) instead of a 500.
+    if (error.code === 11000) {
+      const existing = await BattleResult.findOne({ draftId: req.params.draftId });
+      if (existing) return res.json(existing);
+    }
     console.error('Error simulating battle:', error);
     res.status(500).json({ error: error.message });
   }

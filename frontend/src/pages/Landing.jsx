@@ -155,7 +155,7 @@ export const Landing = () => {
                 fontWeight: 900,
                 fontSize: 'clamp(1.8rem, 4vw, 2.4rem)',
                 lineHeight: 1.1,
-                background: `linear-gradient(135deg, #fff 30%, ${currentVerse?.color})`,
+                backgroundImage: `linear-gradient(135deg, #fff 30%, ${currentVerse?.color})`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',

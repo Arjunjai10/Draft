@@ -106,13 +106,14 @@ export const BattleSim = () => {
   }, [advanceState, resetRound, resetBattle]);
 
   useEffect(() => {
-    if (isAutoPlaying && phase !== PHASES.END || (isAutoPlaying && roundIdx < result.rounds.length - 1)) {
+    if (!result) return;
+    if ((isAutoPlaying && phase !== PHASES.END) || (isAutoPlaying && roundIdx < result.rounds.length - 1)) {
       autoPlayTimer.current = setTimeout(() => { advanceState(); }, SPEED_MAP[speed]);
     } else {
       clearTimeout(autoPlayTimer.current);
     }
     return () => clearTimeout(autoPlayTimer.current);
-  }, [isAutoPlaying, phase, roundIdx, speed, advanceState]);
+  }, [isAutoPlaying, phase, roundIdx, speed, advanceState, result]);
 
   if (loading) return (
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-base)', flexDirection: 'column', gap: '1rem' }}>
@@ -137,6 +138,14 @@ export const BattleSim = () => {
   );
 
   const round = result.rounds[roundIdx];
+
+  // round is undefined when roundIdx is stale relative to a freshly-loaded result.
+  // React 18 Strict Mode double-invokes renders; the first invocation can see
+  // roundIdx=N with a result whose rounds.length < N+1 before state settles.
+  // Returning null here is safe — React immediately commits the next render
+  // with the corrected committed state (roundIdx clamped within bounds).
+  if (!round) return null;
+
   const isBattleComplete = roundIdx === result.rounds.length - 1 && phase === PHASES.END;
   const p1Won = round.winner === p1Id || round.winner === 'player1';
   const p2Won = round.winner === p2Id || round.winner === 'player2';
